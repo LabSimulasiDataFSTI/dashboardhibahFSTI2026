@@ -22,8 +22,14 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        /* Custom Checkbox Styling */
-        .checkbox-container { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.25rem 0; }
+        
+        /* Custom dropdown checkbox */
+        .dropdown-check-list { display: inline-block; position: relative; }
+        .dropdown-check-list .anchor { width: 200px; padding: 8px 12px; display: inline-block; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: white; cursor: pointer; font-size: 0.875rem; }
+        .dropdown-check-list .anchor:after { position: absolute; content: ""; border-left: 2px solid black; border-top: 2px solid black; padding: 3px; right: 10px; top: 35%; transform: rotate(-135deg); }
+        .dropdown-check-list .items { padding: 8px; display: none; margin: 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: white; position: absolute; top: 40px; left: 0; width: 100%; z-index: 50; max-height: 200px; overflow-y: auto; }
+        .dropdown-check-list.visible .items { display: block; }
+        .dropdown-check-list .items li { list-style: none; margin-bottom: 4px; font-size: 0.875rem; }
     </style>
 </head>
 <body class="text-slate-800 p-4 md:p-8">
@@ -37,43 +43,31 @@
             </div>
             
             <div class="flex gap-3 flex-wrap justify-end">
-                <select id="filterSumber" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
+                <select id="filterSumber" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
                     <option value="All">Semua Sumber</option><option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option>
                 </select>
-                <select id="filterJurusan" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
+                <select id="filterJurusan" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
                     <option value="All">Semua Jurusan</option><option value="JSAD">JSAD</option><option value="JTIEB">JTIEB</option>
                 </select>
-                <select id="filterJenis" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
+                
+                <div id="listProdi" class="dropdown-check-list" tabindex="100">
+                    <span class="anchor" id="prodiAnchor">Semua Prodi</span>
+                    <ul class="items" id="filterProdiItems">
+                        </ul>
+                </div>
+
+                <select id="filterJenis" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
                     <option value="All">Semua Jenis</option><option value="Penelitian">Penelitian</option><option value="Pengmas">Pengmas</option>
                 </select>
-                <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Cari judul / ketua..." class="border border-slate-300 rounded-lg px-4 py-2 w-64 text-sm h-10">
+                <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Cari judul / ketua..." class="border border-slate-300 rounded-lg px-4 py-2 w-64 text-sm">
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="glass-card p-6 border border-slate-200 col-span-1 h-64 overflow-y-auto">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-sm font-bold text-slate-700">Filter Program Studi</h3>
-                    <button onclick="selectAllProdi()" class="text-[10px] text-indigo-600 font-semibold hover:underline">Pilih Semua</button>
-                </div>
-                <div id="filterProdiContainer" class="flex flex-col text-sm text-slate-600">
-                    </div>
-            </div>
-
-            <div class="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass-card p-6 border-l-4 border-indigo-500 flex flex-col justify-center">
-                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Pendanaan</p><h3 class="text-2xl font-bold" id="cardTotalDana">Rp 0</h3>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-emerald-500 flex flex-col justify-center">
-                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Proyek</p><h3 class="text-2xl font-bold" id="cardTotalProyek">0</h3>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-blue-500 flex flex-col justify-center">
-                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Internal ITK</p><h3 class="text-2xl font-bold" id="cardDanaInternal">Rp 0</h3>
-                </div>
-                <div class="glass-card p-6 border-l-4 border-amber-500 flex flex-col justify-center">
-                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Eksternal BIMA</p><h3 class="text-2xl font-bold" id="cardDanaBima">Rp 0</h3>
-                </div>
-            </div>
+            <div class="glass-card p-6 border-l-4 border-indigo-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Pendanaan</p><h3 class="text-2xl font-bold" id="cardTotalDana">Rp 0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-emerald-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Proyek</p><h3 class="text-2xl font-bold" id="cardTotalProyek">0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-blue-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Internal ITK</p><h3 class="text-2xl font-bold" id="cardDanaInternal">Rp 0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-amber-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Eksternal BIMA</p><h3 class="text-2xl font-bold" id="cardDanaBima">Rp 0</h3></div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -91,7 +85,7 @@
             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <h3 class="text-lg font-bold text-slate-700">Daftar Detail Proyek</h3>
                 <div class="flex gap-2 flex-wrap">
-                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-project-diagram mr-2"></i>Generate Klaster</button>
+                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-project-diagram mr-2"></i>Generate Roadmap 2026-2030</button>
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-2"></i>Ekspor Excel</button>
                     <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-plus mr-2"></i>Tambah Data</button>
                 </div>
@@ -179,42 +173,22 @@
     </div>
 
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col p-6 relative">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl h-[80vh] flex flex-col p-6 relative">
             <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-2xl"></i></button>
-            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>Klasterisasi Riset & Roadmap Fakultas</h2>
-            
-            <div class="flex border-b border-slate-200 mb-4 mt-2">
-                <button onclick="switchTab('tema')" id="btnTabTema" class="tab-btn active px-4 py-2 transition-colors">Klasterisasi Tema</button>
-                <button onclick="switchTab('roadmap')" id="btnTabRoadmap" class="tab-btn px-4 py-2 transition-colors text-indigo-600"><i class="fas fa-route mr-1"></i> Roadmap 2-4 Tahun</button>
-            </div>
-
-            <div class="overflow-y-auto flex-1 mt-2">
-                <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                
-                <div id="gridRoadmap" class="hidden">
-                    <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded text-sm text-slate-700">
-                        Roadmap ini secara otomatis memproyeksikan target hilirisasi dari penelitian yang sedang berjalan berdasarkan kompleksitas luaran (Sistem cerdas/Produk fisik dialokasikan pada Tahun 3-4 untuk pengujian lanjutan, sedangkan Pemodelan dasar/Edukasi diproyeksikan selesai pada Tahun 1-2).
-                    </div>
-                    
-                    <div class="relative border-l-2 border-indigo-200 ml-4 pl-6 pb-6">
-                        <div class="mb-10">
-                            <span class="absolute -left-[11px] bg-indigo-500 w-5 h-5 rounded-full ring-4 ring-white"></span>
-                            <h3 class="text-lg font-bold text-indigo-700 mb-2">Tahun 1 - 2: Penguatan Kapasitas Dasar & Model Teoritis</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="roadmapTahap1"></div>
-                        </div>
-                        <div>
-                            <span class="absolute -left-[11px] bg-emerald-500 w-5 h-5 rounded-full ring-4 ring-white"></span>
-                            <h3 class="text-lg font-bold text-emerald-700 mb-2">Tahun 3 - 4: Hilirisasi, Prototipe & Penerapan Skala Luas</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="roadmapTahap2"></div>
-                        </div>
-                    </div>
-                </div>
+            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>Roadmap & Klasterisasi Riset Fakultas (2026-2030)</h2>
+            <div class="overflow-y-auto flex-1 mt-4">
+                <div id="gridTema" class="grid grid-cols-1 gap-6"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. Inisialisasi Firebase
+        const checkList = document.getElementById('listProdi');
+        checkList.getElementsByClassName('anchor')[0].onclick = function(evt) {
+            if (checkList.classList.contains('visible')) checkList.classList.remove('visible');
+            else checkList.classList.add('visible');
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyByRx4FpUxhkpODU_g4QPEUpRq48iWR4VE",
             authDomain: "hibahfsti.firebaseapp.com",
@@ -226,14 +200,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 2. Variabel Global
         let rawData = [];
         let currentData = [];
         let barChartInstance = null;
         let pieChartInstance = null;
-        let prodiList = [];
 
-        // 3. Ambil Data dari Cloud Real-time
         db.collection("hibah").onSnapshot((snapshot) => {
             rawData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
@@ -248,26 +219,37 @@
         async function saveData(event) {
             event.preventDefault();
             const id = document.getElementById('formId').value;
+            const jenisInput = document.getElementById('formJenis').value;
+            
             const newData = {
                 Ketua: document.getElementById('formKetua').value,
                 Judul: document.getElementById('formJudul').value,
                 "Program Studi": document.getElementById('formProdi').value,
                 Jurusan: document.getElementById('formJurusan').value,
-                Jenis: document.getElementById('formJenis').value,
+                Jenis: jenisInput,
                 "Sumber Hibah": document.getElementById('formSumber').value,
                 Dana: parseInt(document.getElementById('formDana').value),
                 Skema: document.getElementById('formSkema').value || ""
             };
 
             try {
-                if (id) { await db.collection("hibah").doc(id).update(newData); alert("Data diperbarui!"); } 
-                else { await db.collection("hibah").add(newData); alert("Data ditambahkan!"); }
+                if (id) {
+                    await db.collection("hibah").doc(id).update(newData);
+                    alert("Data di Cloud berhasil diperbarui!");
+                } else {
+                    await db.collection("hibah").add(newData);
+                    alert("Data baru berhasil ditambahkan ke Cloud!");
+                }
                 closeModal();
-            } catch (error) { alert("Error menyimpan: " + error.message); }
+            } catch (error) {
+                alert("Error menyimpan data: " + error.message);
+            }
         }
 
         async function deleteData(id) {
-            if(confirm("Hapus data ini dari Cloud?")) await db.collection("hibah").doc(id).delete();
+            if(confirm("Apakah Anda yakin ingin menghapus data ini dari Cloud secara permanen?")) {
+                await db.collection("hibah").doc(id).delete();
+            }
         }
 
         function editData(id) {
@@ -283,7 +265,8 @@
             document.getElementById('formSumber').value = data['Sumber Hibah'] || "Internal ITK";
             document.getElementById('formDana').value = data.Dana || 0;
             document.getElementById('formSkema').value = data.Skema || "";
-            openModal();
+            
+            document.getElementById('dataModal').classList.remove('hidden'); 
         }
 
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
@@ -295,53 +278,49 @@
                 document.getElementById('modalTitle').textContent = "Tambah Data Hibah";
             }
         }
-        function closeModal() { document.getElementById('dataModal').classList.add('hidden'); document.getElementById('formId').value = ""; }
-        function openRoadmap() { document.getElementById('roadmapModal').classList.remove('hidden'); generateAllClusters(); switchTab('tema'); }
+        
+        function closeModal() { 
+            document.getElementById('dataModal').classList.add('hidden'); 
+            document.getElementById('formId').value = ""; 
+        }
+        
+        function openRoadmap() { document.getElementById('roadmapModal').classList.remove('hidden'); generateAllClusters(); }
         function closeRoadmap() { document.getElementById('roadmapModal').classList.add('hidden'); }
 
-        function switchTab(tabName) {
-            document.getElementById('btnTabTema').classList.remove('active', 'text-indigo-600');
-            document.getElementById('btnTabRoadmap').classList.remove('active', 'text-indigo-600');
-            document.getElementById('gridTema').classList.add('hidden');
-            document.getElementById('gridRoadmap').classList.add('hidden');
-            
-            if(tabName === 'tema') {
-                document.getElementById('btnTabTema').classList.add('active', 'text-indigo-600');
-                document.getElementById('gridTema').classList.remove('hidden');
-            } else {
-                document.getElementById('btnTabRoadmap').classList.add('active', 'text-indigo-600');
-                document.getElementById('gridRoadmap').classList.remove('hidden');
-            }
-        }
-
-        // FUNGSI MULTI-SELECT PRODI
         function populateProdiFilter() {
-            const container = document.getElementById('filterProdiContainer');
-            const datalist = document.getElementById('prodiOptions');
-            const newProdiList = [...new Set(rawData.map(item => item['Program Studi'] || ""))].filter(p => p !== "").sort();
+            const ul = document.getElementById('filterProdiItems');
+            const uniqueProdi = [...new Set(rawData.map(item => item['Program Studi'] || ""))].filter(p => p !== "").sort();
             
-            // Hanya perbarui UI jika ada prodi baru (mencegah checkbox ter-reset otomatis)
-            if(JSON.stringify(newProdiList) !== JSON.stringify(prodiList)) {
-                prodiList = newProdiList;
-                container.innerHTML = ''; datalist.innerHTML = '';
-                
-                prodiList.forEach(prodi => {
-                    // Update Checkbox
-                    container.innerHTML += `
-                        <label class="checkbox-container">
-                            <input type="checkbox" value="${prodi}" class="prodi-checkbox rounded text-indigo-600 focus:ring-indigo-500" checked onchange="applyFilters()">
-                            <span>${prodi}</span>
-                        </label>`;
-                    // Update Datalist (untuk Form Tambah Data)
-                    datalist.innerHTML += `<option value="${prodi}">${prodi}</option>`;
-                });
-            }
+            ul.innerHTML = '<li><input type="checkbox" id="checkAllProdi" checked onclick="toggleAllProdi(this)" /> <label for="checkAllProdi" class="font-bold">Semua Prodi</label></li>';
+            
+            uniqueProdi.forEach(prodi => {
+                ul.innerHTML += `<li><input type="checkbox" class="prodi-checkbox" value="${prodi}" checked onchange="handleProdiChange()" /> <label>${prodi}</label></li>`;
+            });
         }
 
-        function selectAllProdi() {
+        function toggleAllProdi(source) {
             const checkboxes = document.querySelectorAll('.prodi-checkbox');
-            checkboxes.forEach(cb => cb.checked = true);
+            checkboxes.forEach(cb => cb.checked = source.checked);
+            updateAnchorText();
             applyFilters();
+        }
+
+        function handleProdiChange() {
+            const checkboxes = document.querySelectorAll('.prodi-checkbox');
+            const checkAll = document.getElementById('checkAllProdi');
+            checkAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+            updateAnchorText();
+            applyFilters();
+        }
+
+        function updateAnchorText() {
+            const checkboxes = document.querySelectorAll('.prodi-checkbox');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked);
+            const anchor = document.getElementById('prodiAnchor');
+            
+            if(checked.length === checkboxes.length) anchor.textContent = "Semua Prodi";
+            else if(checked.length === 0) anchor.textContent = "Pilih Prodi";
+            else anchor.textContent = `${checked.length} Prodi Terpilih`;
         }
 
         function applyFilters() {
@@ -350,12 +329,13 @@
             const fSumber = document.getElementById('filterSumber').value;
             const sQ = document.getElementById('searchInput').value.toLowerCase();
             
-            // Ambil prodi yang di-ceklis
-            const checkedProdi = Array.from(document.querySelectorAll('.prodi-checkbox:checked')).map(cb => cb.value);
+            const activeProdiCheckboxes = document.querySelectorAll('.prodi-checkbox:checked');
+            const activeProdis = Array.from(activeProdiCheckboxes).map(cb => cb.value);
 
             currentData = rawData.filter(row => {
+                const isProdiMatch = activeProdis.includes(row['Program Studi']);
                 return (fJur === 'All' || row.Jurusan === fJur) &&
-                       (checkedProdi.includes(row['Program Studi'])) &&
+                       isProdiMatch &&
                        (fJenis === 'All' || (row.Jenis && row.Jenis.includes(fJenis))) &&
                        (fSumber === 'All' || row['Sumber Hibah'] === fSumber) &&
                        ((row.Judul||'').toLowerCase().includes(sQ) || (row.Ketua||'').toLowerCase().includes(sQ));
@@ -419,44 +399,51 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // FUNGSI ROADMAP & KLASTERISASI
         function generateAllClusters() {
             const dictTema = {
-                "Komputasi & Kecerdasan Buatan": { k: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "machine learning"], c: "border-blue-500", i: "fa-laptop-code", level: "lanjut" },
-                "Material Maju & Sains Terapan": { k: ["material", "nano", "baterai", "surya", "fisika", "kimia", "implan"], c: "border-purple-500", i: "fa-atom", level: "lanjut" },
-                "Pemodelan, Matematika & Data": { k: ["spasial", "prediksi", "model", "matematika", "statistik", "aktuaria", "evaluasi"], c: "border-emerald-500", i: "fa-chart-line", level: "dasar" },
-                "Sosial & Edukasi Lingkungan": { k: ["pelatihan", "umkm", "masyarakat", "wisata", "lingkungan", "edukasi", "sosialisasi"], c: "border-amber-500", i: "fa-users", level: "dasar" }
+                "Komputasi & Kecerdasan Buatan": { k: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "machine learning"], c: "border-blue-500", i: "fa-laptop-code", r2026: "Pondasi Algoritma Dasar & Deteksi Objek", r2028: "Optimasi AI Terapan & Sistem Prediktif IKN", r2030: "Sistem Otonom, AI Terintegrasi & Smart City Platform" },
+                "Material Maju & Sains Terapan": { k: ["material", "nano", "baterai", "surya", "fisika", "kimia", "implan"], c: "border-purple-500", i: "fa-atom", r2026: "Eksplorasi Material Dasar (Lokal Kaltim)", r2028: "Sintesis & Karakterisasi Material Fungsional", r2030: "Hilirisasi Komponen Cerdas & Bio-material Medis" },
+                "Pemodelan, Matematika & Data Aktuaria": { k: ["spasial", "prediksi", "model", "matematika", "statistik", "aktuaria", "dinamika"], c: "border-emerald-500", i: "fa-chart-line", r2026: "Pemodelan Matematika Deterministik & Spasial", r2028: "Simulasi Dinamika Kompleks & Aktuaria Lingkungan", r2030: "Platform Keputusan Berbasis Big Data & Pemodelan Presisi" },
+                "Pemberdayaan Masyarakat & Ekonomi Digital": { k: ["pelatihan", "umkm", "masyarakat", "wisata", "lingkungan", "ekonomi"], c: "border-amber-500", i: "fa-users", r2026: "Literasi Digital Dasar UMKM & Pendampingan RT", r2028: "Digitalisasi Layanan Pariwisata & Ekonomi Sirkular", r2030: "Desa Digital Mandiri & Ekosistem Ekonomi Kreatif Terpadu" }
             };
-            
-            const gridTema = document.getElementById('gridTema'); gridTema.innerHTML = '';
-            const gridTahap1 = document.getElementById('roadmapTahap1'); gridTahap1.innerHTML = '';
-            const gridTahap2 = document.getElementById('roadmapTahap2'); gridTahap2.innerHTML = '';
+            const grid = document.getElementById('gridTema'); grid.innerHTML = '';
             
             Object.keys(dictTema).forEach(key => {
-                let count = 0; let prodi = new Set(); let totalDana = 0;
+                let count = 0; let prodi = new Set();
                 currentData.forEach(r => {
                     const txt = ((r.Judul||'') + " " + (r['Program Studi']||'')).toLowerCase();
-                    if(dictTema[key].k.some(kw => txt.includes(kw))) { count++; prodi.add(r['Program Studi']); totalDana += r.Dana; }
+                    if(dictTema[key].k.some(kw => txt.includes(kw))) { count++; prodi.add(r['Program Studi']); }
                 });
                 
-                if(count > 0) {
-                    const pBadges = Array.from(prodi).map(p => `<span class="bg-gray-100 text-[10px] px-1 rounded mr-1 border border-slate-200">${p}</span>`).join('');
-                    
-                    const cardHTML = `<div class="p-4 border-t-4 ${dictTema[key].c} bg-white rounded shadow-sm border border-slate-100">
-                        <h3 class="font-bold text-sm mb-1 text-slate-800"><i class="fas ${dictTema[key].i} mr-2 opacity-70"></i>${key}</h3>
-                        <p class="text-xs text-slate-500 mb-2">${count} Proyek Aktif | ${formatRupiah(totalDana)}</p>
-                        <div class="flex flex-wrap gap-y-1">${pBadges}</div></div>`;
-                    
-                    // Masukkan ke Grid Tema
-                    gridTema.innerHTML += cardHTML;
-                    
-                    // Masukkan ke Roadmap berdasarkan level kompleksitas
-                    if(dictTema[key].level === "dasar") {
-                        gridTahap1.innerHTML += cardHTML;
-                    } else {
-                        gridTahap2.innerHTML += cardHTML;
-                    }
-                }
+                // Tampilkan semua tema strategis untuk roadmap
+                const pBadges = prodi.size > 0 ? Array.from(prodi).map(p => `<span class="bg-gray-100 text-xs px-2 py-1 rounded mr-1 font-semibold">${p}</span>`).join('') : '<span class="text-xs text-gray-400">Belum ada kolaborasi</span>';
+                
+                grid.innerHTML += `
+                    <div class="p-5 border-l-4 ${dictTema[key].c} bg-slate-50 rounded-r shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg text-slate-800"><i class="fas ${dictTema[key].i} text-slate-400 mr-2"></i>${key}</h3>
+                            <span class="bg-white px-3 py-1 rounded-full text-xs font-bold border">${count} Proyek Saat Ini</span>
+                        </div>
+                        <div class="mb-4">${pBadges}</div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase mb-3 tracking-wider">Arah Strategis Roadmap</h4>
+                            <div class="flex flex-col md:flex-row gap-4 relative">
+                                <div class="flex-1 bg-white p-3 rounded border border-slate-200 relative z-10">
+                                    <span class="absolute -top-3 left-3 bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">2026-2027</span>
+                                    <p class="text-sm mt-2 text-slate-700 leading-tight">${dictTema[key].r2026}</p>
+                                </div>
+                                <div class="flex-1 bg-white p-3 rounded border border-slate-200 relative z-10">
+                                    <span class="absolute -top-3 left-3 bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded">2028-2029</span>
+                                    <p class="text-sm mt-2 text-slate-700 leading-tight">${dictTema[key].r2028}</p>
+                                </div>
+                                <div class="flex-1 bg-white p-3 rounded border border-slate-200 relative z-10 border-l-4 ${dictTema[key].c}">
+                                    <span class="absolute -top-3 left-3 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">2030 Target</span>
+                                    <p class="text-sm mt-2 text-slate-700 font-medium leading-tight">${dictTema[key].r2030}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
             });
         }
     </script>
