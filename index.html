@@ -532,5 +532,23 @@
         }
         document.addEventListener("DOMContentLoaded", initDashboard);
     </script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+  // SALIN BLOK INI DARI FIREBASE CONSOLE ANDA
+  const firebaseConfig = {
+  apiKey: "AIzaSyByRx4FpUxhkpODU_g4QPEUpRq48iWR4VE",
+  authDomain: "hibahfsti.firebaseapp.com",
+  projectId: "hibahfsti",
+  storageBucket: "hibahfsti.firebasestorage.app",
+  messagingSenderId: "760574296069",
+  appId: "1:760574296069:web:bb3e3fbcb1857fc3bcdc6c",
+  measurementId: "G-ZT5RRKG3Y7"
+};
+  // Inisialisasi Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore(); // "db" ini adalah pintu ke database Anda
+</script>
 </body>
 </html>
