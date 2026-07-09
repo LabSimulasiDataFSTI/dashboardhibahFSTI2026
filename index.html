@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -18,39 +17,32 @@
         .table-container { max-height: 500px; overflow-y: auto; }
         th { position: sticky; top: 0; background-color: #f1f5f9; z-index: 10; }
         .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 50; }
+        .tab-btn.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+        .tab-btn { color: #64748b; font-weight: 500; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        /* Custom Checkbox Styling */
+        .checkbox-container { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.25rem 0; }
     </style>
 </head>
 <body class="text-slate-800 p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <img src="logo_itk.png" alt="Logo ITK" width="120" class="mb-4" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png'; this.style.display='block';">
-                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Halaman Informasi Hibah Penelitian dan PkM 2026</h1>
+                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Sistem Informasi Hibah (Cloud)</h1>
                 <p class="text-slate-500 mt-1">Manajemen Data Penelitian & Pengabdian FSTI ITK</p>
             </div>
             
-            <div class="flex gap-3 flex-wrap justify-end items-start">
+            <div class="flex gap-3 flex-wrap justify-end">
                 <select id="filterSumber" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
                     <option value="All">Semua Sumber</option><option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option>
                 </select>
                 <select id="filterJurusan" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
                     <option value="All">Semua Jurusan</option><option value="JSAD">JSAD</option><option value="JTIEB">JTIEB</option>
                 </select>
-                
-                <!-- Filter Prodi Multi-Select -->
-                <div class="flex flex-col">
-                    <select id="filterProdi" multiple size="3" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm w-48 shadow-sm">
-                        <option value="All" selected>Semua Prodi (Reset)</option>
-                        <!-- Options generated via JS -->
-                    </select>
-                    <span class="text-[10px] text-slate-500 mt-1 ml-1">*Tahan Ctrl/Cmd untuk pilih >1</span>
-                </div>
-
                 <select id="filterJenis" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm h-10">
                     <option value="All">Semua Jenis</option><option value="Penelitian">Penelitian</option><option value="Pengmas">Pengmas</option>
                 </select>
@@ -58,15 +50,32 @@
             </div>
         </header>
 
-        <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="glass-card p-6 border-l-4 border-indigo-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Pendanaan</p><h3 class="text-2xl font-bold" id="cardTotalDana">Rp 0</h3></div>
-            <div class="glass-card p-6 border-l-4 border-emerald-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Proyek</p><h3 class="text-2xl font-bold" id="cardTotalProyek">0</h3></div>
-            <div class="glass-card p-6 border-l-4 border-blue-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Internal ITK</p><h3 class="text-2xl font-bold" id="cardDanaInternal">Rp 0</h3></div>
-            <div class="glass-card p-6 border-l-4 border-amber-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Eksternal BIMA</p><h3 class="text-2xl font-bold" id="cardDanaBima">Rp 0</h3></div>
+            <div class="glass-card p-6 border border-slate-200 col-span-1 h-64 overflow-y-auto">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-slate-700">Filter Program Studi</h3>
+                    <button onclick="selectAllProdi()" class="text-[10px] text-indigo-600 font-semibold hover:underline">Pilih Semua</button>
+                </div>
+                <div id="filterProdiContainer" class="flex flex-col text-sm text-slate-600">
+                    </div>
+            </div>
+
+            <div class="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="glass-card p-6 border-l-4 border-indigo-500 flex flex-col justify-center">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Pendanaan</p><h3 class="text-2xl font-bold" id="cardTotalDana">Rp 0</h3>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-emerald-500 flex flex-col justify-center">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Proyek</p><h3 class="text-2xl font-bold" id="cardTotalProyek">0</h3>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-blue-500 flex flex-col justify-center">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Internal ITK</p><h3 class="text-2xl font-bold" id="cardDanaInternal">Rp 0</h3>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-amber-500 flex flex-col justify-center">
+                    <p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Eksternal BIMA</p><h3 class="text-2xl font-bold" id="cardDanaBima">Rp 0</h3>
+                </div>
+            </div>
         </div>
 
-        <!-- Charts Row -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="glass-card p-6 md:col-span-2">
                 <h3 class="text-lg font-bold mb-4">Alokasi Dana per Program Studi</h3>
@@ -78,12 +87,11 @@
             </div>
         </div>
 
-        <!-- Data Table -->
         <div class="glass-card p-6">
             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <h3 class="text-lg font-bold text-slate-700">Daftar Detail Proyek</h3>
                 <div class="flex gap-2 flex-wrap">
-                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-project-diagram mr-2"></i>Roadmap & Klaster</button>
+                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-project-diagram mr-2"></i>Generate Klaster</button>
                     <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-2"></i>Ekspor Excel</button>
                     <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-plus mr-2"></i>Tambah Data</button>
                 </div>
@@ -106,7 +114,6 @@
         </div>
     </div>
 
-    <!-- Modal Form Tambah/Edit -->
     <div id="dataModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
             <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
@@ -165,42 +172,47 @@
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-slate-700">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Simpan ke database</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Simpan ke Cloud</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Roadmap/Klasterisasi & Timeline -->
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[85vh] flex flex-col p-6 relative">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col p-6 relative">
             <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-2xl"></i></button>
-            <h2 class="text-2xl font-bold mb-4"><i class="fas fa-map-signs text-indigo-600 mr-2"></i>Strategi Riset Fakultas</h2>
+            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>Klasterisasi Riset & Roadmap Fakultas</h2>
             
-            <!-- Tabs -->
-            <div class="flex border-b border-slate-200 mb-4">
-                <button onclick="switchRoadmapTab('klaster')" id="tabKlaster" class="px-4 py-2 text-indigo-600 border-b-2 border-indigo-600 font-bold transition-colors">Klasterisasi Topik</button>
-                <button onclick="switchRoadmapTab('timeline')" id="tabTimeline" class="px-4 py-2 text-slate-500 hover:text-indigo-600 transition-colors">Roadmap 4 Tahun (2026-2029)</button>
+            <div class="flex border-b border-slate-200 mb-4 mt-2">
+                <button onclick="switchTab('tema')" id="btnTabTema" class="tab-btn active px-4 py-2 transition-colors">Klasterisasi Tema</button>
+                <button onclick="switchTab('roadmap')" id="btnTabRoadmap" class="tab-btn px-4 py-2 transition-colors text-indigo-600"><i class="fas fa-route mr-1"></i> Roadmap 2-4 Tahun</button>
             </div>
 
-            <!-- Content Area -->
-            <div class="overflow-y-auto flex-1 pr-2">
-                <!-- Tab 1: Klasterisasi -->
-                <div id="contentKlaster" class="block">
-                    <p class="text-sm text-slate-500 mb-4">Pemetaan otomatis topik penelitian berdasarkan kemiripan judul, kata kunci, dan kolaborasi antar Program Studi.</p>
-                    <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
+            <div class="overflow-y-auto flex-1 mt-2">
+                <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 
-                <!-- Tab 2: Timeline Roadmap -->
-                <div id="contentTimeline" class="hidden">
-                    <p class="text-sm text-slate-500 mb-6">Proyeksi luaran dan target capaian klaster riset Fakultas Sains dan Teknologi Informasi (2026-2029).</p>
-                    <div id="timelineContainer" class="flex flex-col gap-6"></div>
+                <div id="gridRoadmap" class="hidden">
+                    <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded text-sm text-slate-700">
+                        Roadmap ini secara otomatis memproyeksikan target hilirisasi dari penelitian yang sedang berjalan berdasarkan kompleksitas luaran (Sistem cerdas/Produk fisik dialokasikan pada Tahun 3-4 untuk pengujian lanjutan, sedangkan Pemodelan dasar/Edukasi diproyeksikan selesai pada Tahun 1-2).
+                    </div>
+                    
+                    <div class="relative border-l-2 border-indigo-200 ml-4 pl-6 pb-6">
+                        <div class="mb-10">
+                            <span class="absolute -left-[11px] bg-indigo-500 w-5 h-5 rounded-full ring-4 ring-white"></span>
+                            <h3 class="text-lg font-bold text-indigo-700 mb-2">Tahun 1 - 2: Penguatan Kapasitas Dasar & Model Teoritis</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="roadmapTahap1"></div>
+                        </div>
+                        <div>
+                            <span class="absolute -left-[11px] bg-emerald-500 w-5 h-5 rounded-full ring-4 ring-white"></span>
+                            <h3 class="text-lg font-bold text-emerald-700 mb-2">Tahun 3 - 4: Hilirisasi, Prototipe & Penerapan Skala Luas</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="roadmapTahap2"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN FIREBASE SCRIPT -->
     <script>
         // 1. Inisialisasi Firebase
         const firebaseConfig = {
@@ -219,6 +231,7 @@
         let currentData = [];
         let barChartInstance = null;
         let pieChartInstance = null;
+        let prodiList = [];
 
         // 3. Ambil Data dari Cloud Real-time
         db.collection("hibah").onSnapshot((snapshot) => {
@@ -232,41 +245,29 @@
             }
         });
 
-        // 4. Logika CRUD Firebase
         async function saveData(event) {
             event.preventDefault();
             const id = document.getElementById('formId').value;
-            const jenisInput = document.getElementById('formJenis').value;
-            
             const newData = {
                 Ketua: document.getElementById('formKetua').value,
                 Judul: document.getElementById('formJudul').value,
                 "Program Studi": document.getElementById('formProdi').value,
                 Jurusan: document.getElementById('formJurusan').value,
-                Jenis: jenisInput,
+                Jenis: document.getElementById('formJenis').value,
                 "Sumber Hibah": document.getElementById('formSumber').value,
                 Dana: parseInt(document.getElementById('formDana').value),
                 Skema: document.getElementById('formSkema').value || ""
             };
 
             try {
-                if (id) {
-                    await db.collection("hibah").doc(id).update(newData);
-                    alert("Data di database berhasil diperbarui!");
-                } else {
-                    await db.collection("hibah").add(newData);
-                    alert("Data baru berhasil ditambahkan ke database!");
-                }
+                if (id) { await db.collection("hibah").doc(id).update(newData); alert("Data diperbarui!"); } 
+                else { await db.collection("hibah").add(newData); alert("Data ditambahkan!"); }
                 closeModal();
-            } catch (error) {
-                alert("Error menyimpan data: " + error.message);
-            }
+            } catch (error) { alert("Error menyimpan: " + error.message); }
         }
 
         async function deleteData(id) {
-            if(confirm("Apakah Anda yakin ingin menghapus data ini dari database secara permanen?")) {
-                await db.collection("hibah").doc(id).delete();
-            }
+            if(confirm("Hapus data ini dari Cloud?")) await db.collection("hibah").doc(id).delete();
         }
 
         function editData(id) {
@@ -282,12 +283,9 @@
             document.getElementById('formSumber').value = data['Sumber Hibah'] || "Internal ITK";
             document.getElementById('formDana').value = data.Dana || 0;
             document.getElementById('formSkema').value = data.Skema || "";
-            
-            // Tampilkan modal edit
-            document.getElementById('dataModal').classList.remove('hidden'); 
+            openModal();
         }
 
-        // 5. Fungsi Antarmuka (UI) & Filters
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
         
         function openModal() { 
@@ -297,44 +295,67 @@
                 document.getElementById('modalTitle').textContent = "Tambah Data Hibah";
             }
         }
-        function closeModal() { 
-            document.getElementById('dataModal').classList.add('hidden'); 
-            document.getElementById('formId').value = ""; 
+        function closeModal() { document.getElementById('dataModal').classList.add('hidden'); document.getElementById('formId').value = ""; }
+        function openRoadmap() { document.getElementById('roadmapModal').classList.remove('hidden'); generateAllClusters(); switchTab('tema'); }
+        function closeRoadmap() { document.getElementById('roadmapModal').classList.add('hidden'); }
+
+        function switchTab(tabName) {
+            document.getElementById('btnTabTema').classList.remove('active', 'text-indigo-600');
+            document.getElementById('btnTabRoadmap').classList.remove('active', 'text-indigo-600');
+            document.getElementById('gridTema').classList.add('hidden');
+            document.getElementById('gridRoadmap').classList.add('hidden');
+            
+            if(tabName === 'tema') {
+                document.getElementById('btnTabTema').classList.add('active', 'text-indigo-600');
+                document.getElementById('gridTema').classList.remove('hidden');
+            } else {
+                document.getElementById('btnTabRoadmap').classList.add('active', 'text-indigo-600');
+                document.getElementById('gridRoadmap').classList.remove('hidden');
+            }
         }
 
+        // FUNGSI MULTI-SELECT PRODI
         function populateProdiFilter() {
-            const filterProdi = document.getElementById('filterProdi');
-            // Simpan state pilihan sebelumnya agar tidak ter-reset otomatis saat onSnapshot berjalan
-            const selectedOptions = Array.from(filterProdi.selectedOptions).map(o => o.value);
+            const container = document.getElementById('filterProdiContainer');
+            const datalist = document.getElementById('prodiOptions');
+            const newProdiList = [...new Set(rawData.map(item => item['Program Studi'] || ""))].filter(p => p !== "").sort();
             
-            const uniqueProdi = [...new Set(rawData.map(item => item['Program Studi'] || ""))].sort();
-            
-            filterProdi.innerHTML = `<option value="All" ${selectedOptions.includes("All") || selectedOptions.length === 0 ? 'selected' : ''}>Semua Prodi (Reset)</option>`;
-            uniqueProdi.forEach(prodi => {
-                if(prodi) {
-                    const isSelected = selectedOptions.includes(prodi) ? 'selected' : '';
-                    filterProdi.innerHTML += `<option value="${prodi}" ${isSelected}>${prodi}</option>`;
-                }
-            });
+            // Hanya perbarui UI jika ada prodi baru (mencegah checkbox ter-reset otomatis)
+            if(JSON.stringify(newProdiList) !== JSON.stringify(prodiList)) {
+                prodiList = newProdiList;
+                container.innerHTML = ''; datalist.innerHTML = '';
+                
+                prodiList.forEach(prodi => {
+                    // Update Checkbox
+                    container.innerHTML += `
+                        <label class="checkbox-container">
+                            <input type="checkbox" value="${prodi}" class="prodi-checkbox rounded text-indigo-600 focus:ring-indigo-500" checked onchange="applyFilters()">
+                            <span>${prodi}</span>
+                        </label>`;
+                    // Update Datalist (untuk Form Tambah Data)
+                    datalist.innerHTML += `<option value="${prodi}">${prodi}</option>`;
+                });
+            }
+        }
+
+        function selectAllProdi() {
+            const checkboxes = document.querySelectorAll('.prodi-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+            applyFilters();
         }
 
         function applyFilters() {
             const fJur = document.getElementById('filterJurusan').value;
-            
-            // Ambil semua prodi yang dipilih (Multi-Select)
-            const prodiSelect = document.getElementById('filterProdi');
-            const selectedProdis = Array.from(prodiSelect.selectedOptions).map(opt => opt.value);
-            const isAllProdi = selectedProdis.includes("All") || selectedProdis.length === 0;
-
             const fJenis = document.getElementById('filterJenis').value;
             const fSumber = document.getElementById('filterSumber').value;
             const sQ = document.getElementById('searchInput').value.toLowerCase();
+            
+            // Ambil prodi yang di-ceklis
+            const checkedProdi = Array.from(document.querySelectorAll('.prodi-checkbox:checked')).map(cb => cb.value);
 
             currentData = rawData.filter(row => {
-                const matchProdi = isAllProdi || selectedProdis.includes(row['Program Studi']);
-                
                 return (fJur === 'All' || row.Jurusan === fJur) &&
-                       matchProdi &&
+                       (checkedProdi.includes(row['Program Studi'])) &&
                        (fJenis === 'All' || (row.Jenis && row.Jenis.includes(fJenis))) &&
                        (fSumber === 'All' || row['Sumber Hibah'] === fSumber) &&
                        ((row.Judul||'').toLowerCase().includes(sQ) || (row.Ketua||'').toLowerCase().includes(sQ));
@@ -398,81 +419,43 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // ==================== KLASTERISASI & ROADMAP ====================
-        const strategicThemes = {
-            "Komputasi & Kecerdasan Buatan": { k: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "machine learning"], c: "border-blue-500", i: "fa-laptop-code", t1: "Pengembangan Algoritma & Model Dasar", t2: "Prototipe Sistem & Interkoneksi IoT", t3: "Integrasi Platform & Uji Lapangan", t4: "Komersialisasi & Hak Cipta Perangkat Lunak" },
-            "Material Maju & Sains": { k: ["material", "nano", "baterai", "surya", "fisika", "kimia"], c: "border-purple-500", i: "fa-atom", t1: "Sintesis & Karakterisasi Material Dasar", t2: "Fabrikasi & Uji Skala Laboratorium", t3: "Optimasi Modul & Skala Terbatas", t4: "Paten Inovasi Material & Hilirisasi Industri" },
-            "Pemodelan, Matematika & Data": { k: ["spasial", "prediksi", "model", "matematika", "statistik", "aktuaria"], c: "border-emerald-500", i: "fa-chart-line", t1: "Analisis Data Dasar & Pemodelan Matematis", t2: "Simulasi Prediksi Dinamis & Spasial", t3: "Sistem Rekomendasi Kebijakan Cerdas", t4: "Integrasi Platform Nasional & Standarisasi" },
-            "Sosial & Lingkungan": { k: ["pelatihan", "umkm", "masyarakat", "wisata", "lingkungan"], c: "border-amber-500", i: "fa-users", t1: "Pemetaan Sosial & Literasi Dasar", t2: "Pendampingan Teknologi Tepat Guna", t3: "Kemandirian Ekonomi Skala Menengah", t4: "Sertifikasi Produk & Keberlanjutan Berbasis Komunitas" }
-        };
-
-        function openRoadmap() { 
-            document.getElementById('roadmapModal').classList.remove('hidden'); 
-            switchRoadmapTab('klaster');
-            generateAllClusters(); 
-        }
-        function closeRoadmap() { document.getElementById('roadmapModal').classList.add('hidden'); }
-
-        function switchRoadmapTab(tab) {
-            if (tab === 'klaster') {
-                document.getElementById('tabKlaster').className = "px-4 py-2 text-indigo-600 border-b-2 border-indigo-600 font-bold transition-colors";
-                document.getElementById('tabTimeline').className = "px-4 py-2 text-slate-500 hover:text-indigo-600 transition-colors";
-                document.getElementById('contentKlaster').classList.remove('hidden');
-                document.getElementById('contentTimeline').classList.add('hidden');
-            } else {
-                document.getElementById('tabTimeline').className = "px-4 py-2 text-indigo-600 border-b-2 border-indigo-600 font-bold transition-colors";
-                document.getElementById('tabKlaster').className = "px-4 py-2 text-slate-500 hover:text-indigo-600 transition-colors";
-                document.getElementById('contentTimeline').classList.remove('hidden');
-                document.getElementById('contentKlaster').classList.add('hidden');
-            }
-        }
-
+        // FUNGSI ROADMAP & KLASTERISASI
         function generateAllClusters() {
-            const grid = document.getElementById('gridTema'); grid.innerHTML = '';
-            const timeline = document.getElementById('timelineContainer'); timeline.innerHTML = '';
+            const dictTema = {
+                "Komputasi & Kecerdasan Buatan": { k: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "machine learning"], c: "border-blue-500", i: "fa-laptop-code", level: "lanjut" },
+                "Material Maju & Sains Terapan": { k: ["material", "nano", "baterai", "surya", "fisika", "kimia", "implan"], c: "border-purple-500", i: "fa-atom", level: "lanjut" },
+                "Pemodelan, Matematika & Data": { k: ["spasial", "prediksi", "model", "matematika", "statistik", "aktuaria", "evaluasi"], c: "border-emerald-500", i: "fa-chart-line", level: "dasar" },
+                "Sosial & Edukasi Lingkungan": { k: ["pelatihan", "umkm", "masyarakat", "wisata", "lingkungan", "edukasi", "sosialisasi"], c: "border-amber-500", i: "fa-users", level: "dasar" }
+            };
             
-            Object.keys(strategicThemes).forEach(key => {
-                let count = 0; let prodi = new Set();
-                
-                // Klasterisasi
+            const gridTema = document.getElementById('gridTema'); gridTema.innerHTML = '';
+            const gridTahap1 = document.getElementById('roadmapTahap1'); gridTahap1.innerHTML = '';
+            const gridTahap2 = document.getElementById('roadmapTahap2'); gridTahap2.innerHTML = '';
+            
+            Object.keys(dictTema).forEach(key => {
+                let count = 0; let prodi = new Set(); let totalDana = 0;
                 currentData.forEach(r => {
                     const txt = ((r.Judul||'') + " " + (r['Program Studi']||'')).toLowerCase();
-                    if(strategicThemes[key].k.some(kw => txt.includes(kw))) { count++; prodi.add(r['Program Studi']); }
+                    if(dictTema[key].k.some(kw => txt.includes(kw))) { count++; prodi.add(r['Program Studi']); totalDana += r.Dana; }
                 });
                 
                 if(count > 0) {
-                    const pBadges = Array.from(prodi).map(p => `<span class="bg-gray-100 text-[10px] px-1 rounded mr-1">${p}</span>`).join('');
+                    const pBadges = Array.from(prodi).map(p => `<span class="bg-gray-100 text-[10px] px-1 rounded mr-1 border border-slate-200">${p}</span>`).join('');
                     
-                    // 1. Render Kartu Klaster
-                    grid.innerHTML += `<div class="p-4 border-t-4 ${strategicThemes[key].c} bg-white rounded-lg shadow-sm border border-slate-100">
-                        <h3 class="font-bold text-sm mb-1 text-slate-800"><i class="fas ${strategicThemes[key].i} mr-2"></i>${key}</h3>
-                        <p class="text-xs text-slate-500 mb-3">${count} Proyek Riset Aktif</p>
-                        <div><p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Kolaborasi Prodi:</p>${pBadges}</div></div>`;
-
-                    // 2. Render Timeline (Roadmap 4 Tahun)
-                    timeline.innerHTML += `
-                        <div class="bg-slate-50 rounded-lg p-5 border border-slate-200">
-                            <h3 class="font-bold text-slate-800 mb-4 border-b pb-2"><i class="fas ${strategicThemes[key].i} mr-2"></i>Roadmap: ${key}</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div class="border-l-4 ${strategicThemes[key].c} pl-3 bg-white p-3 rounded shadow-sm">
-                                    <h4 class="font-bold text-sm text-slate-700">Tahun 1 (2026)</h4>
-                                    <p class="text-xs text-slate-500 mt-1">${strategicThemes[key].t1}</p>
-                                </div>
-                                <div class="border-l-4 ${strategicThemes[key].c} pl-3 bg-white p-3 rounded shadow-sm opacity-90">
-                                    <h4 class="font-bold text-sm text-slate-700">Tahun 2 (2027)</h4>
-                                    <p class="text-xs text-slate-500 mt-1">${strategicThemes[key].t2}</p>
-                                </div>
-                                <div class="border-l-4 ${strategicThemes[key].c} pl-3 bg-white p-3 rounded shadow-sm opacity-80">
-                                    <h4 class="font-bold text-sm text-slate-700">Tahun 3 (2028)</h4>
-                                    <p class="text-xs text-slate-500 mt-1">${strategicThemes[key].t3}</p>
-                                </div>
-                                <div class="border-l-4 ${strategicThemes[key].c} pl-3 bg-white p-3 rounded shadow-sm opacity-70">
-                                    <h4 class="font-bold text-sm text-slate-700">Tahun 4 (2029)</h4>
-                                    <p class="text-xs text-slate-500 mt-1">${strategicThemes[key].t4}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    const cardHTML = `<div class="p-4 border-t-4 ${dictTema[key].c} bg-white rounded shadow-sm border border-slate-100">
+                        <h3 class="font-bold text-sm mb-1 text-slate-800"><i class="fas ${dictTema[key].i} mr-2 opacity-70"></i>${key}</h3>
+                        <p class="text-xs text-slate-500 mb-2">${count} Proyek Aktif | ${formatRupiah(totalDana)}</p>
+                        <div class="flex flex-wrap gap-y-1">${pBadges}</div></div>`;
+                    
+                    // Masukkan ke Grid Tema
+                    gridTema.innerHTML += cardHTML;
+                    
+                    // Masukkan ke Roadmap berdasarkan level kompleksitas
+                    if(dictTema[key].level === "dasar") {
+                        gridTahap1.innerHTML += cardHTML;
+                    } else {
+                        gridTahap2.innerHTML += cardHTML;
+                    }
                 }
             });
         }
