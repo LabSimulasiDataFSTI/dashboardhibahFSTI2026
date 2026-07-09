@@ -39,7 +39,7 @@
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <img src="logo_itk.png" alt="Logo ITK" width="120" class="mb-4" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png'; this.style.display='block';">
-                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Sistem Informasi Hibah (Cloud)</h1>
+                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Halaman Informasi Hibah Penelitian dan PkM FSTI 2026</h1>
                 <p class="text-slate-500 mt-1">Manajemen Data Penelitian & Pengabdian FSTI ITK</p>
             </div>
             
@@ -167,7 +167,7 @@
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-slate-700">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Simpan ke Cloud</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Simpan ke Database</button>
                 </div>
             </form>
         </div>
@@ -232,10 +232,10 @@
             try {
                 if (id) {
                     await db.collection("hibah").doc(id).update(newData);
-                    alert("Data di Cloud berhasil diperbarui!");
+                    alert("Data di Database berhasil diperbarui!");
                 } else {
                     await db.collection("hibah").add(newData);
-                    alert("Data baru berhasil ditambahkan ke Cloud!");
+                    alert("Data baru berhasil ditambahkan ke Database!");
                 }
                 closeModal();
             } catch (error) {
@@ -244,7 +244,7 @@
         }
 
         async function deleteData(id) {
-            if(confirm("Apakah Anda yakin ingin menghapus data ini dari Cloud secara permanen?")) {
+            if(confirm("Apakah Anda yakin ingin menghapus data ini dari Database secara permanen?")) {
                 await db.collection("hibah").doc(id).delete();
             }
         }
