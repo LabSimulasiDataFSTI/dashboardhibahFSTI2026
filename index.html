@@ -9,66 +9,151 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyByRx4FpUxhkpODU_g4QPEUpRq48iWR4VE",
             authDomain: "hibahfsti.firebaseapp.com",
             projectId: "hibahfsti",
             storageBucket: "hibahfsti.firebasestorage.app",
             messagingSenderId: "760574296069",
-            appId: "1:760574296069:web:bb3e3fbcb1857fc3bcdc6c"
+            appId: "1:760574296069:web:bb3e3fbcb1857fc3bcdc6c",
+            measurementId: "G-ZT5RRKG3Y7"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        // Pindahkan fungsi-fungsi ke window agar bisa diakses HTML
         window.db = db;
         window.collection = collection;
-        window.onSnapshot = onSnapshot;
+        window.getDocs = getDocs;
         window.addDoc = addDoc;
         window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
         window.doc = doc;
+        window.onSnapshot = onSnapshot;
     </script>
-    </head>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 12px; }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        th { position: sticky; top: 0; background-color: #f1f5f9; z-index: 10; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 50; }
+        .tab-btn.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+    </style>
+</head>
 <body class="text-slate-800 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <img src="logo_itk.png" alt="Logo ITK" width="120" class="mb-4">
+                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Sistem Informasi Hibah</h1>
+            </div>
+            <div class="flex gap-3 flex-wrap justify-end">
+                <select id="filterSumber" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm focus:ring-2 focus:ring-indigo-500">
+                    <option value="All">Semua Sumber</option><option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Cari judul / ketua..." class="border border-slate-300 rounded-lg px-4 py-2 w-64 text-sm">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-card p-6 border-l-4 border-indigo-500"><p class="text-xs uppercase text-slate-500">Total Pendanaan</p><h3 class="text-xl font-bold" id="cardTotalDana">Rp 0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-emerald-500"><p class="text-xs uppercase text-slate-500">Total Proyek</p><h3 class="text-xl font-bold" id="cardTotalProyek">0</h3></div>
+        </div>
+
+        <div class="glass-card p-6">
+            <div class="flex justify-between mb-4">
+                <h3 class="text-lg font-bold">Daftar Detail Proyek</h3>
+                <button onclick="openModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm"><i class="fas fa-plus mr-2"></i> Tambah Data</button>
+            </div>
+            <table class="w-full text-left">
+                <thead><tr><th class="p-3">Ketua</th><th class="p-3">Judul</th><th class="p-3">Prodi</th><th class="p-3">Dana</th><th class="p-3">Aksi</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="dataModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">Tambah/Edit Data</h2>
+            <form id="dataForm">
+                <input type="hidden" id="formId">
+                <input type="text" id="formKetua" placeholder="Nama Ketua" class="w-full border p-2 mb-2 rounded" required>
+                <textarea id="formJudul" placeholder="Judul Proyek" class="w-full border p-2 mb-2 rounded" required></textarea>
+                <input type="text" id="formProdi" placeholder="Program Studi" class="w-full border p-2 mb-2 rounded" required>
+                <select id="formSumber" class="w-full border p-2 mb-2 rounded"><option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option></select>
+                <input type="number" id="formDana" placeholder="Dana (Rp)" class="w-full border p-2 mb-2 rounded" required>
+                <input type="text" id="formSkema" placeholder="Skema (Opsional)" class="w-full border p-2 mb-4 rounded">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan ke Cloud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
-        let currentData = [];
-        const db = window.db;
+        // Logika Sinkronisasi Firebase
+        let allData = [];
+        
+        async function initApp() {
+            // Seed Data jika kosong
+            const querySnapshot = await getDocs(collection(window.db, "hibah"));
+            if (querySnapshot.empty) {
+                const defaultData = [...]; // [Masukkan array defaultData Anda dari file sebelumnya di sini]
+                for(let item of defaultData) await addDoc(collection(window.db, "hibah"), item);
+            }
 
-        // Listener Real-time (Ini yang membuat sinkronisasi antar pengguna)
-        onSnapshot(collection(db, "hibah"), (snapshot) => {
-            currentData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateDashboard(currentData);
-        });
+            // Real-time listener
+            onSnapshot(collection(window.db, "hibah"), (snapshot) => {
+                allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTable(allData);
+            });
+        }
 
-        // Simpan Data ke Firebase
         window.saveData = async (e) => {
             e.preventDefault();
             const id = document.getElementById('formId').value;
-            const newData = {
+            const data = {
                 Ketua: document.getElementById('formKetua').value,
                 Judul: document.getElementById('formJudul').value,
                 "Program Studi": document.getElementById('formProdi').value,
                 "Sumber Hibah": document.getElementById('formSumber').value,
                 Dana: parseInt(document.getElementById('formDana').value),
-                Skema: document.getElementById('formSkema').value,
-                Jurusan: document.getElementById('formJurusan').value,
-                Jenis: document.getElementById('formJenis').value
+                Skema: document.getElementById('formSkema').value
             };
-
-            if (id) {
-                await updateDoc(doc(db, "hibah", id), newData);
-                alert("Data berhasil diupdate!");
-            } else {
-                await addDoc(collection(db, "hibah"), newData);
-                alert("Data berhasil ditambahkan!");
-            }
+            if(id) await updateDoc(doc(window.db, "hibah", id), data);
+            else await addDoc(collection(window.db, "hibah"), data);
             closeModal();
         }
-        
-        // Fungsi updateDashboard, renderTable, dll dipanggil di dalam onSnapshot
+
+        window.deleteData = async (id) => {
+            if(confirm('Hapus data?')) await deleteDoc(doc(window.db, "hibah", id));
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td class="p-3">${row.Ketua}</td>
+                    <td class="p-3">${row.Judul}</td>
+                    <td class="p-3">${row['Program Studi']}</td>
+                    <td class="p-3">${formatRupiah(row.Dana)}</td>
+                    <td class="p-3">
+                        <button onclick="editData('${row.id}')" class="text-blue-500">Edit</button>
+                        <button onclick="deleteData('${row.id}')" class="text-red-500 ml-2">Hapus</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        window.openModal = () => document.getElementById('dataModal').classList.remove('hidden');
+        window.closeModal = () => document.getElementById('dataModal').classList.add('hidden');
+        window.formatRupiah = (val) => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR'}).format(val);
+
+        initApp();
     </script>
 </body>
 </html>
