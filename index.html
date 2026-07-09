@@ -17,7 +17,6 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
         .tab-btn.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: bold; }
         .tab-btn { color: #64748b; font-weight: 500; }
         .tab-btn:hover:not(.active) { color: #4f46e5; }
@@ -26,11 +25,12 @@
 <body class="text-slate-800 p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
+        <!-- Header dengan Logo -->
         <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
+                <img src="https://itk.ac.id/wp-content/uploads/2021/04/Logo-ITK-1.png" alt="Logo FSTI ITK" width="200" class="mb-4">
                 <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Sistem Informasi Hibah</h1>
-                <p class="text-slate-500 mt-1">Manajemen Data Penelitian & Pengabdian Fakultas Sains dan Teknologi Informasi</p>
+                <p class="text-slate-500 mt-1">Manajemen Data Penelitian & Pengabdian FSTI ITK</p>
             </div>
             
             <div class="flex gap-3 flex-wrap justify-end">
@@ -123,7 +123,7 @@
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b w-1/4">Judul</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b">Jurusan/Prodi</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b">Jenis</th>
-                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Sumber Hibah</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Sumber & Skema</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b text-right">Dana (Rp)</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b text-center">Aksi</th>
                         </tr>
@@ -142,7 +142,6 @@
             <h2 class="text-2xl font-bold mb-2 text-slate-800"><i class="fas fa-layer-group text-indigo-600 mr-2"></i>Klasterisasi Riset Fakultas</h2>
             <p class="text-sm text-slate-500 mb-4">Pemetaan otomatis berdasarkan NLP (Natural Language Processing) dari judul penelitian dan pengmas.</p>
             
-            <!-- Tab Navigation -->
             <div class="flex border-b border-slate-200 mb-4">
                 <button onclick="switchTab('tema')" id="btnTabTema" class="tab-btn active px-4 py-2 transition-colors">Berdasarkan Tema Topik</button>
                 <button onclick="switchTab('metode')" id="btnTabMetode" class="tab-btn px-4 py-2 transition-colors">Berdasarkan Metode</button>
@@ -150,17 +149,14 @@
             </div>
 
             <div class="overflow-y-auto flex-1 pr-2 pb-4">
-                <!-- Grid Tema (Default) -->
                 <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                <!-- Grid Metode -->
                 <div id="gridMetode" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
-                <!-- Grid Hasil -->
                 <div id="gridHasil" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Form Tambah/Edit (Disederhanakan untuk space, tapi kode tetap sama) -->
+    <!-- Modal Form -->
     <div id="dataModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
             <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
@@ -205,6 +201,25 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Total Dana (Rp)</label>
                         <input type="number" id="formDana" required min="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Skema Penelitian / PkM</label>
+                        <input type="text" id="formSkema" list="skemaOptions" placeholder="Pilih skema Internal atau ketik manual untuk BIMA..." class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-indigo-500">
+                        <datalist id="skemaOptions">
+                            <option value="Pemberdayaan Kemitraan Masyarakat"></option>
+                            <option value="Penelitian Fundamental - Reguler"></option>
+                            <option value="Penelitian Unggulan Fokus Riset (PUFR)"></option>
+                            <option value="Program Mahasiswa Mengabdi Desa (PMMD)"></option>
+                            <option value="Program Pengembangan Kewirausahaan (PPK)"></option>
+                            <option value="Prototipe"></option>
+                            <option value="Riset Dosen Pemula (RDP)"></option>
+                            <option value="Riset Inovasi (RI)"></option>
+                            <option value="Riset Kerjasama Dalam Negeri (RKDN)"></option>
+                            <option value="Riset Pendukung IKN (RPI)"></option>
+                            <option value="Riset Stimulus Start Up (RSS)"></option>
+                            <option value="Riset Tenaga Kependidikan (RTK)"></option>
+                        </datalist>
+                        <p class="text-[10px] text-slate-500 mt-1">Gunakan daftar pilihan untuk internal ITK, atau ketik nama skema kustom untuk Eksternal BIMA.</p>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
@@ -322,7 +337,10 @@
                         <span class="text-xs text-slate-500">${row['Program Studi']}</span>
                     </td>
                     <td class="p-3"><span class="${badgeJenis} px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap">${displayJenis}</span></td>
-                    <td class="p-3"><span class="${badgeSumber} px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">${row['Sumber Hibah']}</span></td>
+                    <td class="p-3">
+                        <span class="${badgeSumber} px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">${row['Sumber Hibah']}</span>
+                        <div class="text-[10px] text-slate-500 mt-1 leading-tight">${row.Skema ? row.Skema : '-'}</div>
+                    </td>
                     <td class="p-3 text-right font-medium text-indigo-700">${formatRupiah(row.Dana).replace('Rp', '')}</td>
                     <td class="p-3 text-center">
                         <button onclick="editData(${row.id})" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 p-2 rounded transition-colors" title="Edit Data">
@@ -366,13 +384,11 @@
             });
         }
         
-        // ==================== TABS & KLASTERISASI MULTIDIMENSI ====================
         function switchTab(tabName) {
             ['Tema', 'Metode', 'Hasil'].forEach(t => {
                 document.getElementById(`btnTab${t}`).classList.remove('active');
                 document.getElementById(`grid${t}`).classList.add('hidden');
             });
-            
             document.getElementById(`btnTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
             document.getElementById(`grid${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('hidden');
         }
@@ -387,75 +403,29 @@
         }
 
         function generateAllClusters() {
-            // 1. Kamus Tema Topik (Seperti sebelumnya)
             const dictTema = {
-                "Komputasi & Kecerdasan Buatan": {
-                    keywords: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "deep learning", "machine learning", "jaringan", "aplikasi", "sistem informasi", "web", "teknologi", "komputasi", "perangkat lunak", "otomatisasi", "sensor", "citra"],
-                    color: "border-blue-500", bg: "bg-blue-50", text: "text-blue-700", icon: "fa-laptop-code"
-                },
-                "Material Maju & Sains Terapan": {
-                    keywords: ["material", "nano", "implan", "lapisan", "baterai", "surya", "komposit", "kimia", "fisika", "tegangan", "listrik", "fotokatalis", "sintesis", "ekstrak", "termal", "sains"],
-                    color: "border-purple-500", bg: "bg-purple-50", text: "text-purple-700", icon: "fa-atom"
-                },
-                "Pemodelan, Matematika & Data": {
-                    keywords: ["spasial", "prediksi", "peramalan", "model", "persamaan diferensial", "matematika", "statistik", "risiko", "saham", "finansial", "aktuaria", "dinamika", "analisis data", "optimasi", "epidemiologi", "reaksi-difusi", "graf"],
-                    color: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", icon: "fa-chart-line"
-                },
-                "Sosial, Masyarakat & Lingkungan": {
-                    keywords: ["pelatihan", "umkm", "masyarakat", "desa", "literasi", "sekolah", "guru", "siswa", "wisata", "edukasi", "pemberdayaan", "lingkungan", "limbah", "ekonomi", "bisnis"],
-                    color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-700", icon: "fa-users"
-                }
+                "Komputasi & Kecerdasan Buatan": { keywords: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "deep learning", "machine learning", "jaringan", "aplikasi", "sistem informasi", "web", "teknologi", "komputasi", "perangkat lunak", "otomatisasi", "sensor", "citra"], color: "border-blue-500", bg: "bg-blue-50", text: "text-blue-700", icon: "fa-laptop-code" },
+                "Material Maju & Sains Terapan": { keywords: ["material", "nano", "implan", "lapisan", "baterai", "surya", "komposit", "kimia", "fisika", "tegangan", "listrik", "fotokatalis", "sintesis", "ekstrak", "termal", "sains"], color: "border-purple-500", bg: "bg-purple-50", text: "text-purple-700", icon: "fa-atom" },
+                "Pemodelan, Matematika & Data": { keywords: ["spasial", "prediksi", "peramalan", "model", "persamaan diferensial", "matematika", "statistik", "risiko", "saham", "finansial", "aktuaria", "dinamika", "analisis data", "optimasi", "epidemiologi", "reaksi-difusi", "graf"], color: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", icon: "fa-chart-line" },
+                "Sosial, Masyarakat & Lingkungan": { keywords: ["pelatihan", "umkm", "masyarakat", "desa", "literasi", "sekolah", "guru", "siswa", "wisata", "edukasi", "pemberdayaan", "lingkungan", "limbah", "ekonomi", "bisnis"], color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-700", icon: "fa-users" }
             };
-
-            // 2. Kamus Metode Penelitian
             const dictMetode = {
-                "Pengembangan Sistem (R&D)": {
-                    keywords: ["pengembangan", "rancang bangun", "desain", "prototyping", "rancangan", "implementasi sistem"],
-                    color: "border-cyan-500", bg: "bg-cyan-50", text: "text-cyan-700", icon: "fa-cogs"
-                },
-                "Algoritma & AI (Machine/Deep Learning)": {
-                    keywords: ["deep learning", "machine learning", "gru-garch", "des-garch", "neural network", "klasifikasi otomatis", "algoritma cerdas", "metode silar", "yolo"],
-                    color: "border-rose-500", bg: "bg-rose-50", text: "text-rose-700", icon: "fa-brain"
-                },
-                "Eksperimen & Sintesis Laboratorium": {
-                    keywords: ["sintesis", "metode silar", "karakterisasi", "fabrikasi", "uji", "ekstraksi", "biokompatibilitas"],
-                    color: "border-fuchsia-500", bg: "bg-fuchsia-50", text: "text-fuchsia-700", icon: "fa-flask"
-                },
-                "Pemodelan, Spasial & Analisis Kuantitatif": {
-                    keywords: ["analisis spasial", "pemodelan matematika", "reaksi-difusi", "persamaan diferensial", "simulasi", "graf metrik", "analisis", "evaluasi", "perbandingan model"],
-                    color: "border-teal-500", bg: "bg-teal-50", text: "text-teal-700", icon: "fa-square-root-alt"
-                },
-                "Pendekatan Sosial & Kualitatif": {
-                    keywords: ["pelatihan", "sosialisasi", "pendampingan", "kualitatif", "studi kasus", "literasi", "penerapan"],
-                    color: "border-orange-500", bg: "bg-orange-50", text: "text-orange-700", icon: "fa-comments"
-                }
+                "Pengembangan Sistem (R&D)": { keywords: ["pengembangan", "rancang bangun", "desain", "prototyping", "rancangan", "implementasi sistem"], color: "border-cyan-500", bg: "bg-cyan-50", text: "text-cyan-700", icon: "fa-cogs" },
+                "Algoritma & AI": { keywords: ["deep learning", "machine learning", "gru-garch", "des-garch", "neural network", "klasifikasi otomatis", "algoritma cerdas", "metode silar", "yolo"], color: "border-rose-500", bg: "bg-rose-50", text: "text-rose-700", icon: "fa-brain" },
+                "Eksperimen Laboratorium": { keywords: ["sintesis", "metode silar", "karakterisasi", "fabrikasi", "uji", "ekstraksi", "biokompatibilitas"], color: "border-fuchsia-500", bg: "bg-fuchsia-50", text: "text-fuchsia-700", icon: "fa-flask" },
+                "Pemodelan Kuantitatif": { keywords: ["analisis spasial", "pemodelan matematika", "reaksi-difusi", "persamaan diferensial", "simulasi", "graf metrik", "analisis", "evaluasi", "perbandingan model"], color: "border-teal-500", bg: "bg-teal-50", text: "text-teal-700", icon: "fa-square-root-alt" },
+                "Pendekatan Sosial": { keywords: ["pelatihan", "sosialisasi", "pendampingan", "kualitatif", "studi kasus", "literasi", "penerapan"], color: "border-orange-500", bg: "bg-orange-50", text: "text-orange-700", icon: "fa-comments" }
             };
-
-            // 3. Kamus Target Hasil / Luaran
             const dictHasil = {
-                "Prototipe / Produk / Aplikasi": {
-                    keywords: ["platform", "aplikasi", "sistem informasi", "prototipe", "alat", "website", "dashboard", "smart"],
-                    color: "border-indigo-500", bg: "bg-indigo-50", text: "text-indigo-700", icon: "fa-mobile-alt"
-                },
-                "Buku, Modul & Edukasi Masyarakat": {
-                    keywords: ["buku panduan", "modul", "pelatihan", "peningkatan mutu", "edukasi", "literasi digital", "kesadaran"],
-                    color: "border-pink-500", bg: "bg-pink-50", text: "text-pink-700", icon: "fa-book"
-                },
-                "Material Baru & Komponen Fisik": {
-                    keywords: ["material kandidat", "implan tulang", "lapisan tipis", "sel surya", "baterai", "nano-", "komposit", "cangkang"],
-                    color: "border-yellow-500", bg: "bg-yellow-50", text: "text-yellow-700", icon: "fa-cubes"
-                },
-                "Model, Kerangka Kerja & Publikasi": {
-                    keywords: ["model", "kajian", "pemetaan", "evaluasi", "financial distress", "return dan volatilitas", "peringatan dini", "analisis spasial"],
-                    color: "border-sky-500", bg: "bg-sky-50", text: "text-sky-700", icon: "fa-file-alt"
-                }
+                "Prototipe / Aplikasi": { keywords: ["platform", "aplikasi", "sistem informasi", "prototipe", "alat", "website", "dashboard", "smart"], color: "border-indigo-500", bg: "bg-indigo-50", text: "text-indigo-700", icon: "fa-mobile-alt" },
+                "Buku & Edukasi": { keywords: ["buku panduan", "modul", "pelatihan", "peningkatan mutu", "edukasi", "literasi digital", "kesadaran"], color: "border-pink-500", bg: "bg-pink-50", text: "text-pink-700", icon: "fa-book" },
+                "Material & Komponen": { keywords: ["material kandidat", "implan tulang", "lapisan tipis", "sel surya", "baterai", "nano-", "komposit", "cangkang"], color: "border-yellow-500", bg: "bg-yellow-50", text: "text-yellow-700", icon: "fa-cubes" },
+                "Model & Publikasi": { keywords: ["model", "kajian", "pemetaan", "evaluasi", "financial distress", "return dan volatilitas", "peringatan dini", "analisis spasial"], color: "border-sky-500", bg: "bg-sky-50", text: "text-sky-700", icon: "fa-file-alt" }
             };
 
             function processClustering(dictionary, gridId, defaultLabel) {
                 let clusters = {};
-                Object.keys(dictionary).forEach(key => {
-                    clusters[key] = { prodi: new Set(), count: 0, keywordsHit: {} };
-                });
+                Object.keys(dictionary).forEach(key => { clusters[key] = { prodi: new Set(), count: 0, keywordsHit: {} }; });
                 clusters[defaultLabel] = { prodi: new Set(), count: 0, keywordsHit: {}, color: "border-slate-300", bg: "bg-slate-50", text: "text-slate-600", icon: "fa-question-circle" };
 
                 currentData.forEach(row => {
@@ -467,139 +437,72 @@
                     Object.keys(dictionary).forEach(key => {
                         let matches = 0;
                         let localTopWord = "";
-                        dictionary[key].keywords.forEach(kw => {
-                            if (text.includes(kw)) {
-                                matches++;
-                                localTopWord = kw;
-                            }
-                        });
-                        if (matches > highestMatches) {
-                            highestMatches = matches;
-                            matchedKey = key;
-                            topWord = localTopWord;
-                        }
+                        dictionary[key].keywords.forEach(kw => { if (text.includes(kw)) { matches++; localTopWord = kw; } });
+                        if (matches > highestMatches) { highestMatches = matches; matchedKey = key; topWord = localTopWord; }
                     });
 
                     clusters[matchedKey].prodi.add(row['Program Studi']);
                     clusters[matchedKey].count += 1;
-                    if (topWord) {
-                        clusters[matchedKey].keywordsHit[topWord] = (clusters[matchedKey].keywordsHit[topWord] || 0) + 1;
-                    }
+                    if (topWord) { clusters[matchedKey].keywordsHit[topWord] = (clusters[matchedKey].keywordsHit[topWord] || 0) + 1; }
                 });
 
                 const grid = document.getElementById(gridId);
                 grid.innerHTML = '';
-
                 Object.keys(clusters).forEach(key => {
                     let cluster = clusters[key];
                     if (cluster.count === 0) return; 
-
                     let isOther = key === defaultLabel;
                     let style = isOther ? {color: cluster.color, bg: cluster.bg, text: cluster.text, icon: cluster.icon} : dictionary[key];
-                    
                     let topKeywordsArr = Object.entries(cluster.keywordsHit).sort((a,b) => b[1] - a[1]).slice(0, 3).map(k => k[0]);
                     let keywordBadges = topKeywordsArr.map(kw => `<span class="bg-white border border-slate-200 px-2 py-1 rounded text-[10px] text-slate-600 mr-1 mb-1 inline-block capitalize">${kw}</span>`).join('');
-                    if(keywordBadges === "") keywordBadges = "<span class='text-xs text-slate-400 italic'>Multidimensi / Lainnya</span>";
-
                     let prodiBadges = Array.from(cluster.prodi).map(p => `<span class="${style.bg} ${style.text} px-2 py-1 rounded text-[10px] font-medium mr-1 mb-1 inline-block border ${style.color} border-opacity-30">${p}</span>`).join('');
 
-                    let cardHTML = `
-                        <div class="bg-white border-t-4 ${style.color} rounded-xl p-4 shadow-sm border border-slate-200">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="${style.bg} ${style.text} w-8 h-8 rounded-lg flex items-center justify-center text-sm">
-                                    <i class="fas ${style.icon}"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-sm text-slate-800 leading-tight">${key}</h3>
-                                    <p class="text-[11px] text-slate-500 mt-0.5">${cluster.count} Proyek</p>
-                                </div>
-                            </div>
-                            <div class="mb-2">
-                                <p class="text-[10px] font-semibold text-slate-400 mb-1 uppercase">Sinergi Prodi:</p>
-                                <div class="flex flex-wrap">${prodiBadges}</div>
-                            </div>
-                            <div>
-                                <p class="text-[10px] font-semibold text-slate-400 mb-1 uppercase">Kata Kunci Deteksi:</p>
-                                <div class="flex flex-wrap">${keywordBadges}</div>
-                            </div>
-                        </div>
-                    `;
-                    grid.innerHTML += cardHTML;
+                    grid.innerHTML += `<div class="bg-white border-t-4 ${style.color} rounded-xl p-4 shadow-sm border border-slate-200"><div class="flex items-center gap-3 mb-3"><div class="${style.bg} ${style.text} w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i class="fas ${style.icon}"></i></div><div><h3 class="font-bold text-sm text-slate-800 leading-tight">${key}</h3><p class="text-[11px] text-slate-500 mt-0.5">${cluster.count} Proyek</p></div></div><div class="mb-2"><p class="text-[10px] font-semibold text-slate-400 mb-1 uppercase">Sinergi Prodi:</p><div class="flex flex-wrap">${prodiBadges}</div></div><div><p class="text-[10px] font-semibold text-slate-400 mb-1 uppercase">Kata Kunci Deteksi:</p><div class="flex flex-wrap">${keywordBadges}</div></div></div>`;
                 });
             }
-
-            // Eksekusi pemetaan untuk ke-3 tab
             processClustering(dictTema, 'gridTema', "Tema Lainnya");
-            processClustering(dictMetode, 'gridMetode', "Metode Campuran / Lainnya");
-            processClustering(dictHasil, 'gridHasil', "Luaran Umum / Lainnya");
+            processClustering(dictMetode, 'gridMetode', "Metode Campuran");
+            processClustering(dictHasil, 'gridHasil', "Luaran Umum");
         }
 
-        // ==================== EKSPOR EXCEL ====================
         function exportToExcel() {
-            if (currentData.length === 0) {
-                alert("Tidak ada data untuk diekspor!");
-                return;
-            }
-            let csvContent = "\uFEFFsep=;\nKetua Pengusul;Judul Proyek;Jurusan;Program Studi;Jenis Kegiatan;Sumber Hibah;Dana Pendanaan (Rp)\n";
+            if (currentData.length === 0) return;
+            let csvContent = "﻿sep=;
+Ketua Pengusul;Judul Proyek;Jurusan;Program Studi;Jenis Kegiatan;Sumber Hibah;Skema;Dana Pendanaan (Rp)
+";
             currentData.forEach(row => {
-                const ketua = `"${row.Ketua.replace(/"/g, '""')}"`;
-                const judul = `"${row.Judul.replace(/"/g, '""')}"`;
-                const jurusan = `"${row.Jurusan.replace(/"/g, '""')}"`;
-                const prodi = `"${row['Program Studi'].replace(/"/g, '""')}"`;
-                const jenis = `"${(row.Jenis === 'Penelitian' ? 'Penelitian' : 'Pengmas')}"`;
-                const sumber = `"${row['Sumber Hibah'].replace(/"/g, '""')}"`;
-                const dana = row.Dana;
-                csvContent += `${ketua};${judul};${jurusan};${prodi};${jenis};${sumber};${dana}\n`;
+                csvContent += `"${row.Ketua.replace(/"/g, '""')}";"${row.Judul.replace(/"/g, '""')}";"${row.Jurusan.replace(/"/g, '""')}";"${row['Program Studi'].replace(/"/g, '""')}";"${(row.Jenis === 'Penelitian' ? 'Penelitian' : 'Pengmas')}";"${row['Sumber Hibah'].replace(/"/g, '""')}";"${(row.Skema || '').replace(/"/g, '""')}";${row.Dana}
+`;
             });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
             link.setAttribute("download", "Ekspor_Data_Hibah_Fakultas.csv");
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
         }
 
-        // ==================== CRUD ====================
-        function openModal() {
-            document.getElementById('dataModal').classList.remove('hidden');
-            document.getElementById('modalTitle').textContent = "Tambah Data Hibah";
-            document.getElementById('dataForm').reset();
-            document.getElementById('formId').value = ""; 
-        }
-
-        function closeModal() {
-            document.getElementById('dataModal').classList.add('hidden');
-        }
-
+        function openModal() { document.getElementById('dataModal').classList.remove('hidden'); document.getElementById('modalTitle').textContent = "Tambah Data Hibah"; document.getElementById('dataForm').reset(); document.getElementById('formId').value = ""; }
+        function closeModal() { document.getElementById('dataModal').classList.add('hidden'); }
         function editData(id) {
             const data = rawData.find(r => r.id === id);
             if(!data) return;
-
             document.getElementById('modalTitle').textContent = "Edit Data Hibah";
             document.getElementById('formId').value = data.id;
             document.getElementById('formKetua').value = data.Ketua;
             document.getElementById('formJudul').value = data.Judul;
             document.getElementById('formProdi').value = data['Program Studi'];
             document.getElementById('formJurusan').value = data.Jurusan;
-            
-            const jenisVal = (data.Jenis.includes('Pengmas') || data.Jenis.includes('Pengabdian')) ? 'Pengmas' : 'Penelitian';
-            document.getElementById('formJenis').value = jenisVal;
-            
+            document.getElementById('formJenis').value = (data.Jenis.includes('Pengmas')) ? 'Pengmas' : 'Penelitian';
             document.getElementById('formSumber').value = data['Sumber Hibah'];
             document.getElementById('formDana').value = data.Dana;
-
+            document.getElementById('formSkema').value = data.Skema || "";
             document.getElementById('dataModal').classList.remove('hidden');
         }
-
         function saveData(event) {
             event.preventDefault();
-
             const id = document.getElementById('formId').value;
             const jenisInput = document.getElementById('formJenis').value;
-            
             const newData = {
                 Ketua: document.getElementById('formKetua').value,
                 Judul: document.getElementById('formJudul').value,
@@ -609,29 +512,22 @@
                 "Jenis Kegiatan": (jenisInput === 'Penelitian') ? 'Penelitian' : 'Pengabdian Kepada Masyarakat',
                 "Sumber Hibah": document.getElementById('formSumber').value,
                 Dana: parseInt(document.getElementById('formDana').value),
+                Skema: document.getElementById('formSkema').value,
             };
-
             if (id) {
                 const index = rawData.findIndex(r => r.id == id);
-                if(index !== -1) {
-                    newData.id = parseInt(id);
-                    rawData[index] = { ...rawData[index], ...newData };
-                }
+                if(index !== -1) { newData.id = parseInt(id); rawData[index] = { ...rawData[index], ...newData }; }
             } else {
                 const maxId = rawData.reduce((max, p) => p.id > max ? p.id : max, 0);
                 newData.id = maxId + 1;
-                newData.Status = "Baru Ditambahkan"; 
                 rawData.unshift(newData); 
             }
-
             localStorage.setItem('hibahData2026', JSON.stringify(rawData));
             populateProdiFilter();
             closeModal();
             applyFilters();
-            
             alert(id ? "Data berhasil diperbarui!" : "Data baru berhasil ditambahkan!");
         }
-
         document.addEventListener("DOMContentLoaded", initDashboard);
     </script>
 </body>
