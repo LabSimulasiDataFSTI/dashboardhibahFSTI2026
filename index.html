@@ -10,7 +10,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
@@ -115,7 +114,7 @@
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b">Ketua</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b w-1/3">Judul</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b">Prodi</th>
-                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Sumber & </th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Sumber & Skema</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b text-right">Dana (Rp)</th>
                             <th class="p-3 text-sm font-semibold text-slate-600 border-b text-center">Aksi</th>
                         </tr>
@@ -211,9 +210,13 @@
                         <input type="number" id="formMahasiswa" min="0" placeholder="Misal: 3" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Upload Kontrak (Khusus Eksternal)</label>
-                        <input type="file" id="formKontrak" accept=".pdf,.doc,.docx" disabled class="w-full border rounded-lg px-3 py-1.5 focus:ring-indigo-500 disabled-input text-sm">
-                        <p class="text-[10px] text-slate-500 mt-1" id="kontrakHelper">Hanya aktif untuk hibah Eksternal BIMA / Lainnya.</p>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Kontrak Eksternal</label>
+                        <select id="formKontrak" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500 text-sm">
+                            <option value="Tidak Perlu">Tidak Perlu (Internal)</option>
+                            <option value="Belum Diunggah">Belum Diunggah</option>
+                            <option value="Sudah Diunggah">Sudah Diunggah</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1" id="kontrakHelper">Pilih status kontrak jika hibah BIMA/Lainnya.</p>
                     </div>
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Fasilitas Laboratorium/Alat yang Digunakan</label>
@@ -222,13 +225,12 @@
                 </div>
 
                 <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
-                    <button type="button" id="submitBtn" onclick="closeModal()" class="px-5 py-2 border rounded-lg text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="button" onclick="closeModal()" class="px-5 py-2 border rounded-lg text-slate-700 hover:bg-slate-50">Batal</button>
                     <button type="submit" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 shadow-sm"><i class="fas fa-cloud-upload-alt mr-2"></i>Simpan Data</button>
                 </div>
             </form>
         </div>
     </div>
-
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl h-[80vh] flex flex-col p-6 relative">
             <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-2xl"></i></button>
@@ -294,22 +296,19 @@
             }
         });
 
-        // Toggle Upload Kontrak berdasarkan Sumber Hibah
         function toggleKontrakUpload() {
             const sumber = document.getElementById('formSumber').value;
-            const inputKontrak = document.getElementById('formKontrak');
+            const selectKontrak = document.getElementById('formKontrak');
             const helper = document.getElementById('kontrakHelper');
             
             if (sumber === 'Internal ITK' || sumber === 'All') {
-                inputKontrak.disabled = true;
-                inputKontrak.classList.add('disabled-input');
-                helper.textContent = "Hanya aktif untuk hibah Eksternal BIMA / Lainnya.";
-                helper.classList.remove('text-indigo-600');
+                selectKontrak.value = 'Tidak Perlu';
+                selectKontrak.disabled = true;
+                selectKontrak.classList.add('disabled-input');
             } else {
-                inputKontrak.disabled = false;
-                inputKontrak.classList.remove('disabled-input');
-                helper.textContent = "Silakan unggah softcopy kontrak (PDF/DOCX).";
-                helper.classList.add('text-indigo-600');
+                if(selectKontrak.value === 'Tidak Perlu') selectKontrak.value = 'Belum Diunggah';
+                selectKontrak.disabled = false;
+                selectKontrak.classList.remove('disabled-input');
             }
         }
 
@@ -318,15 +317,8 @@
             event.preventDefault();
             const id = document.getElementById('formId').value;
             const jenisInput = document.getElementById('formJenis').value;
-            const fileInput = document.getElementById('formKontrak');
-            const submitBtn = document.querySelector('button[type="submit"]');
             
-            // Ubah teks tombol saat upload berjalan agar user tahu proses sedang berlangsung
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
-            submitBtn.disabled = true;
-            
-            let newData = {
+            const newData = {
                 Ketua: document.getElementById('formKetua').value,
                 Judul: document.getElementById('formJudul').value,
                 "Program Studi": document.getElementById('formProdi').value,
@@ -336,43 +328,26 @@
                 Dana: parseInt(document.getElementById('formDana').value),
                 Skema: document.getElementById('formSkema').value || "",
                 Mahasiswa: parseInt(document.getElementById('formMahasiswa').value) || 0,
-                Fasilitas: document.getElementById('formFasilitas').value || ""
+                Fasilitas: document.getElementById('formFasilitas').value || "",
+                StatusKontrak: document.getElementById('formKontrak').value || "Tidak Perlu"
             };
 
             try {
-                // Proses Upload File jika ada
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const storageRef = firebase.storage().ref('kontrak/' + new Date().getTime() + '_' + file.name);
-                    const snapshot = await storageRef.put(file);
-                    const downloadURL = await snapshot.ref.getDownloadURL();
-                    newData.KontrakURL = downloadURL; // Menyimpan link PDF/DOC ke Firestore
-                    newData.KontrakDiunggah = true;
-                } else {
-                    if (!id) {
-                         newData.KontrakDiunggah = false;
-                    }
-                }
-
                 if (id) {
                     await db.collection("hibah").doc(id).update(newData);
-                    alert("Data di Database berhasil diperbarui!");
+                    alert("Data berhasil diperbarui!");
                 } else {
                     await db.collection("hibah").add(newData);
-                    alert("Data baru berhasil ditambahkan ke Database!");
+                    alert("Data baru berhasil ditambahkan!");
                 }
                 closeModal();
             } catch (error) {
                 alert("Error menyimpan data: " + error.message);
-            } finally {
-                // Kembalikan tombol ke kondisi semula
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
             }
         }
 
         async function deleteData(id) {
-            if(confirm("Apakah Anda yakin ingin menghapus data ini dari Database secara permanen?")) {
+            if(confirm("Apakah Anda yakin ingin menghapus data ini secara permanen?")) {
                 await db.collection("hibah").doc(id).delete();
             }
         }
@@ -392,6 +367,7 @@
             document.getElementById('formSkema').value = data.Skema || "";
             document.getElementById('formMahasiswa').value = data.Mahasiswa || "";
             document.getElementById('formFasilitas').value = data.Fasilitas || "";
+            document.getElementById('formKontrak').value = data.StatusKontrak || "Tidak Perlu";
             
             toggleKontrakUpload();
             openModal();
@@ -492,7 +468,6 @@
                         <span class="px-2 py-1 rounded text-xs font-semibold whitespace-nowrap block mb-1 ${row.Jenis==='Penelitian' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}">${row.Jenis==='Penelitian' ? 'Penelitian' : 'Pengmas'}</span>
                         <span class="px-2 py-1 rounded text-xs font-semibold whitespace-nowrap block mb-1 ${(row['Sumber Hibah'] === 'Internal ITK') ? 'bg-emerald-100 text-emerald-700' : (row['Sumber Hibah'] === 'Eksternal BIMA' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700')}">${row['Sumber Hibah']}</span>
                         <div class="text-[10px] text-slate-500 mt-1 leading-tight w-full max-w-[120px] whitespace-normal">${row.Skema||'-'}</div>
-                        ${row.KontrakURL ? `<a href="${row.KontrakURL}" target="_blank" class="text-[10px] text-blue-600 underline mt-1 block"><i class="fas fa-file-download"></i> Unduh Kontrak</a>` : ''}
                     </td>
                     <td class="p-3 text-right font-medium text-indigo-700">${formatRupiah(row.Dana).replace('Rp','')}</td>
                     <td class="p-3 text-center">
@@ -535,7 +510,6 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // ==================== FITUR ROADMAP FAKULTAS (NLP CLUSTERING) ====================
         function openRoadmap() { document.getElementById('roadmapModal').classList.remove('hidden'); generateAllClusters(); }
         function closeRoadmap() { document.getElementById('roadmapModal').classList.add('hidden'); }
 
@@ -605,7 +579,6 @@
             });
         }
 
-        // ==================== FITUR KESESUAIAN RENSTRA (SMART CITY & ENERGI) ====================
         function openRenstra() { document.getElementById('renstraModal').classList.remove('hidden'); generateRenstraAnalysis(); }
         function closeRenstra() { document.getElementById('renstraModal').classList.add('hidden'); }
 
@@ -685,7 +658,6 @@
             });
         }
 
-        // ==================== FITUR RELEVANSI MASYARAKAT (SDGs) ====================
         function openRelevansi() { document.getElementById('relevansiModal').classList.remove('hidden'); generateRelevansiAnalysis(); }
         function closeRelevansi() { document.getElementById('relevansiModal').classList.add('hidden'); }
 
@@ -785,4 +757,12 @@
     </script>
 </body>
 </html>
-@ Created by the Computing and Data Laboratory}
+"""
+
+final_html = html_template.replace("__JSON_DATA__", json_str)
+
+with open("Dashboard_Hibah_Roadmap_2026.txt", "w", encoding="utf-8") as f:
+    f.write(final_html)
+
+print("Updated dashboard with Roadmap Feature created successfully.")}}
+@ Created by the Computing and Data Laboratory} 
