@@ -10,7 +10,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
@@ -310,47 +309,43 @@
 
         // 4. Logika CRUD Firebase
         async function saveData(event) {
-    event.preventDefault();
-    const id = document.getElementById('formId').value;
-    const jenisInput = document.getElementById('formJenis').value;
-    const fileInput = document.getElementById('formKontrak');
-    
-    // Objek data dasar
-    let newData = {
-        Ketua: document.getElementById('formKetua').value,
-        Judul: document.getElementById('formJudul').value,
-        "Program Studi": document.getElementById('formProdi').value,
-        Jurusan: document.getElementById('formJurusan').value,
-        Jenis: jenisInput,
-        "Sumber Hibah": document.getElementById('formSumber').value,
-        Dana: parseInt(document.getElementById('formDana').value),
-        Skema: document.getElementById('formSkema').value || "",
-        Mahasiswa: parseInt(document.getElementById('formMahasiswa').value) || 0,
-        Fasilitas: document.getElementById('formFasilitas').value || ""
-    };
+            event.preventDefault();
+            const id = document.getElementById('formId').value;
+            const jenisInput = document.getElementById('formJenis').value;
+            
+            const newData = {
+                Ketua: document.getElementById('formKetua').value,
+                Judul: document.getElementById('formJudul').value,
+                "Program Studi": document.getElementById('formProdi').value,
+                Jurusan: document.getElementById('formJurusan').value,
+                Jenis: jenisInput,
+                "Sumber Hibah": document.getElementById('formSumber').value,
+                Dana: parseInt(document.getElementById('formDana').value),
+                Skema: document.getElementById('formSkema').value || "",
+                Mahasiswa: parseInt(document.getElementById('formMahasiswa').value) || 0,
+                Fasilitas: document.getElementById('formFasilitas').value || "",
+                KontrakDiunggah: document.getElementById('formKontrak').files.length > 0 ? true : false
+            };
 
-    try {
-        // Jika ada file yang diunggah
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            const storageRef = firebase.storage().ref('kontrak/' + new Date().getTime() + '_' + file.name);
-            const snapshot = await storageRef.put(file);
-            const downloadURL = await snapshot.ref.getDownloadURL();
-            newData.KontrakURL = downloadURL; // Simpan URL ke Firestore
+            try {
+                if (id) {
+                    await db.collection("hibah").doc(id).update(newData);
+                    alert("Data di Database berhasil diperbarui!");
+                } else {
+                    await db.collection("hibah").add(newData);
+                    alert("Data baru berhasil ditambahkan ke Database!");
+                }
+                closeModal();
+            } catch (error) {
+                alert("Error menyimpan data: " + error.message);
+            }
         }
 
-        if (id) {
-            await db.collection("hibah").doc(id).update(newData);
-            alert("Data berhasil diperbarui!");
-        } else {
-            await db.collection("hibah").add(newData);
-            alert("Data baru berhasil ditambahkan!");
+        async function deleteData(id) {
+            if(confirm("Apakah Anda yakin ingin menghapus data ini dari Database secara permanen?")) {
+                await db.collection("hibah").doc(id).delete();
+            }
         }
-        closeModal();
-    } catch (error) {
-        alert("Error: " + error.message);
-    }
-}
 
         function editData(id) {
             const data = rawData.find(r => r.id === id);
