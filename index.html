@@ -604,7 +604,7 @@
         function openRoadmap() {
             document.getElementById('roadmapModal').classList.remove('hidden');
             // Menambahkan parameter rendering PDF Google Viewer untuk kompatibilitas GitHub RAW
-            const pdfUrl = "https://raw.githubusercontent.com/januarismail/hibahfsti2026/main/Roadmap_FSTI%20(1).pdf";
+            const pdfUrl = "https://raw.githubusercontent.com/januarismail/hibahfsti2026/main/Roadmap_FSTI.pdf";
             
             // Solusi anti-blokir untuk membaca file GitHub menggunakan layanan docs.google.com
             document.getElementById('pdfViewer').src = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
@@ -781,12 +781,4 @@
     </script>
 </body>
 </html>
-"""
 
-final_html = html_template.replace("__JSON_DATA__", json_str)
-
-with open("Dashboard_Hibah_Roadmap_2026.txt", "w", encoding="utf-8") as f:
-    f.write(final_html)
-
-print("Updated dashboard with Roadmap Feature created successfully.")}
-Roadmap Feature created successfully.")}Saya dirancang hanya untuk memproses dan membuat teks, jadi saya tidak bisa membantu Anda.
