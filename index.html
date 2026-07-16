@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -34,6 +36,9 @@
         .dropdown-check-list.visible .items { display: block; }
         
         .disabled-input { background-color: #f1f5f9; opacity: 0.7; cursor: not-allowed; }
+        
+        /* Container untuk Grafik Jaringan */
+        #networkGraph { width: 100%; height: 350px; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #ffffff; }
     </style>
 </head>
 <body class="text-slate-800 p-4 md:p-8">
@@ -89,9 +94,9 @@
             <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
                 <h3 class="text-lg font-bold text-slate-700">Daftar Detail Proyek</h3>
                 <div class="flex gap-2 flex-wrap">
-                    <a href="https://drive.google.com/file/d/15z0g4qMvbcFCzEwEV_enb1DsCw9Qop6W/view?usp=drive_link" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
-                        <i class="fas fa-file-pdf"></i> Dokumen Roadmap Fakultas
-                    </a>
+                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-project-diagram"></i> Generate Roadmap
+                    </button>
                     <button onclick="openRenstra()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
                         <i class="fas fa-bullseye"></i> Kesesuaian Roadmap FSTI
                     </button>
@@ -235,6 +240,27 @@
                     <button type="submit" id="submitBtn" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 shadow-sm"><i class="fas fa-cloud-upload-alt mr-2"></i>Simpan Data</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[95vh] flex flex-col p-6 relative overflow-hidden">
+            <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10"><i class="fas fa-times text-2xl"></i></button>
+            
+            <h2 class="text-2xl font-bold mb-2 text-slate-800 shrink-0"><i class="fas fa-project-diagram text-indigo-600 mr-2"></i>Roadmap Strategis & Jaringan Kolaborasi FSTI</h2>
+            <p class="text-sm text-slate-500 border-b pb-4 mb-4 shrink-0">Pemetaan otomatis topik penelitian berdasarkan kemiripan judul, kata kunci, dan visualisasi kolaborasi antar Program Studi.</p>
+            
+            <div class="overflow-y-auto flex-1 pr-2">
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2"><i class="fas fa-network-wired text-blue-500 mr-2"></i>Jaringan Keterkaitan Program Studi & Tema</h3>
+                    <div id="networkGraph" class="shadow-inner"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-4"><i class="fas fa-layer-group text-emerald-500 mr-2"></i>Detail Klasterisasi Tema Strategis</h3>
+                    <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -579,6 +605,190 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Ekspor_Hibah_FSTI.csv";
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        // ==================== FITUR ROADMAP FAKULTAS DENGAN NETWORK GRAPH ====================
+        let network = null;
+        
+        function openRoadmap() { 
+            document.getElementById('roadmapModal').classList.remove('hidden'); 
+            generateRoadmapAnalysis(); 
+        }
+        function closeRoadmap() { 
+            document.getElementById('roadmapModal').classList.add('hidden'); 
+            if(network !== null) { network.destroy(); network = null; }
+        }
+
+        function generateRoadmapAnalysis() {
+            const strategicThemes = {
+                "Komputasi & Kecerdasan Buatan": {
+                    keywords: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "deep learning", "machine learning", "jaringan", "aplikasi", "sistem informasi", "web", "teknologi", "komputasi", "perangkat lunak", "otomatisasi", "sensor", "citra"],
+                    color: "border-blue-500", bg: "bg-blue-50", text: "text-blue-700", icon: "fa-laptop-code", nodeColor: "#3b82f6"
+                },
+                "Material Maju & Sains Terapan": {
+                    keywords: ["material", "nano", "implan", "lapisan", "baterai", "surya", "komposit", "kimia", "fisika", "tegangan", "listrik", "fotokatalis", "sintesis", "ekstrak", "termal"],
+                    color: "border-purple-500", bg: "bg-purple-50", text: "text-purple-700", icon: "fa-atom", nodeColor: "#8b5cf6"
+                },
+                "Pemodelan, Matematika & Data Aktuaria": {
+                    keywords: ["spasial", "prediksi", "peramalan", "model", "persamaan", "matematika", "statistik", "risiko", "saham", "finansial", "aktuaria", "dinamika", "analisis data", "optimasi", "epidemiologi", "diferensial"],
+                    color: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", icon: "fa-chart-line", nodeColor: "#10b981"
+                },
+                "Sosial, Pemberdayaan Masyarakat & Lingkungan": {
+                    keywords: ["pelatihan", "umkm", "masyarakat", "desa", "literasi", "sekolah", "guru", "siswa", "wisata", "edukasi", "pemberdayaan", "lingkungan", "limbah", "ekonomi", "bisnis"],
+                    color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-700", icon: "fa-hands-helping", nodeColor: "#f59e0b"
+                }
+            };
+
+            let clusters = {};
+            Object.keys(strategicThemes).forEach(theme => {
+                clusters[theme] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {} };
+            });
+            clusters["Topik Interdisipliner Lainnya"] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {}, color: "border-slate-500", bg: "bg-slate-50", text: "text-slate-700", icon: "fa-layer-group", nodeColor: "#64748b" };
+
+            // Variabel untuk Network Graph
+            let nodes = [];
+            let edges = [];
+            let prodiSet = new Set();
+            let themeProdiLinks = [];
+
+            // Evaluasi Klaster
+            currentData.forEach(row => {
+                let textToAnalyze = ((row.Judul||'') + " " + (row['Program Studi']||'')).toLowerCase();
+                let matchedTheme = "Topik Interdisipliner Lainnya";
+                let highestMatches = 0;
+                let topWord = "";
+
+                Object.keys(strategicThemes).forEach(theme => {
+                    let matches = 0;
+                    let localTopWord = "";
+                    strategicThemes[theme].keywords.forEach(kw => {
+                        if (textToAnalyze.includes(kw)) { matches++; localTopWord = kw; }
+                    });
+
+                    if (matches > highestMatches) { highestMatches = matches; matchedTheme = theme; topWord = localTopWord; }
+                });
+
+                const prodiName = row['Program Studi'] || "Tidak Diketahui";
+                prodiSet.add(prodiName);
+                
+                clusters[matchedTheme].prodi.add(prodiName);
+                clusters[matchedTheme].totalDana += (row.Dana||0);
+                clusters[matchedTheme].count += 1;
+                
+                // Simpan tautan (edge) untuk digambar nanti
+                themeProdiLinks.push({ theme: matchedTheme, prodi: prodiName });
+                
+                if (topWord) {
+                    clusters[matchedTheme].keywordsHit[topWord] = (clusters[matchedTheme].keywordsHit[topWord] || 0) + 1;
+                }
+            });
+
+            // --- Render ke HTML (Cards) ---
+            const roadmapGrid = document.getElementById('gridTema');
+            roadmapGrid.innerHTML = '';
+
+            let themeIdCounter = 1;
+            const themeIdMap = {};
+
+            Object.keys(clusters).forEach(themeName => {
+                let cluster = clusters[themeName];
+                if (cluster.count === 0) return; 
+
+                // Siapkan Node untuk Tema (Kotak)
+                themeIdMap[themeName] = themeIdCounter;
+                nodes.push({
+                    id: themeIdCounter, 
+                    label: themeName + "\\n(" + cluster.count + " Proyek)", 
+                    shape: 'box', 
+                    color: { background: (strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor), border: 'white' },
+                    font: { color: 'white', size: 14, face: 'Inter', bold: true }
+                });
+                themeIdCounter++;
+
+                let isOther = themeName === "Topik Interdisipliner Lainnya";
+                let style = isOther ? {color: cluster.color, bg: cluster.bg, text: cluster.text, icon: cluster.icon} : strategicThemes[themeName];
+                
+                let topKeywordsArr = Object.entries(cluster.keywordsHit).sort((a,b) => b[1] - a[1]).slice(0, 4).map(k => k[0]);
+                let keywordBadges = topKeywordsArr.map(kw => `<span class="bg-white border border-slate-200 px-2 py-1 rounded text-xs text-slate-600 mr-1 mb-1 inline-block capitalize">${kw}</span>`).join('');
+                if(keywordBadges === "") keywordBadges = "<span class='text-xs text-slate-400 italic'>Sinergi Bebas</span>";
+
+                let prodiBadges = Array.from(cluster.prodi).map(p => `<span class="${style.bg} ${style.text} px-2 py-1 rounded-full text-[11px] font-semibold mr-1 mb-1 inline-block border ${style.color} border-opacity-30">${p}</span>`).join('');
+
+                let cardHTML = `
+                    <div class="bg-white border-t-4 ${style.color} rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="${style.bg} ${style.text} w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0">
+                                <i class="fas ${style.icon}"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 leading-tight">${themeName}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${cluster.count} Proyek Penelitian/Pengmas</p>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Prodi Terlibat:</p>
+                            <div class="flex flex-wrap">${prodiBadges}</div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Kata Kunci Utama:</p>
+                            <div class="flex flex-wrap">${keywordBadges}</div>
+                        </div>
+                        <div class="mt-auto pt-3 border-t border-slate-100 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Estimasi Penyerapan:</span>
+                            <span class="font-bold text-slate-700">${formatRupiah(cluster.totalDana)}</span>
+                        </div>
+                    </div>
+                `;
+                roadmapGrid.innerHTML += cardHTML;
+            });
+
+            // --- Persiapan Node Prodi (Lingkaran) ---
+            const prodiIdMap = {};
+            Array.from(prodiSet).forEach(prodi => {
+                if(prodi !== "") {
+                    prodiIdMap[prodi] = themeIdCounter;
+                    nodes.push({
+                        id: themeIdCounter, 
+                        label: prodi, 
+                        shape: 'dot', 
+                        size: 15,
+                        color: { background: '#f8fafc', border: '#cbd5e1' },
+                        font: { color: '#475569', size: 12, face: 'Inter' }
+                    });
+                    themeIdCounter++;
+                }
+            });
+
+            // --- Persiapan Edges (Koneksi Tema-Prodi) ---
+            // Buat rekap jumlah koneksi agar garis lebih tebal jika lebih banyak proyek
+            const connectionCounts = {};
+            themeProdiLinks.forEach(link => {
+                if(link.prodi !== "") {
+                    const key = `${themeIdMap[link.theme]}_${prodiIdMap[link.prodi]}`;
+                    connectionCounts[key] = (connectionCounts[key] || 0) + 1;
+                }
+            });
+
+            Object.keys(connectionCounts).forEach(key => {
+                const [from, to] = key.split('_');
+                edges.push({
+                    from: parseInt(from),
+                    to: parseInt(to),
+                    width: Math.min(connectionCounts[key] * 0.5 + 1, 5), // Ketebalan garis
+                    color: { color: '#cbd5e1', highlight: '#94a3b8' },
+                    smooth: { type: 'continuous' }
+                });
+            });
+
+            // --- Menggambar Network Graph Menggunakan Vis.js ---
+            const container = document.getElementById('networkGraph');
+            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+            const options = {
+                physics: { stabilization: true, barnesHut: { springLength: 150 } },
+                interaction: { hover: true, tooltipDelay: 200, zoomView: true }
+            };
+            if(network !== null) network.destroy();
+            network = new vis.Network(container, data, options);
         }
 
         function openRenstra() { document.getElementById('renstraModal').classList.remove('hidden'); generateRenstraAnalysis(); }
