@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dasbor Eksekutif Hibah FSTI ITK 2026</title>
+    <title>Sistem Informasi Data Hibah Fakultas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
     
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     
@@ -15,348 +14,292 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
-        body { background-color: #f3f2f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #252423; overflow-x: hidden; }
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 12px; }
+        .table-container { max-height: 500px; overflow-y: auto; }
+        th { position: sticky; top: 0; background-color: #f1f5f9; z-index: 10; }
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 50; }
+        .tab-btn.active { border-bottom: 2px solid #4f46e5; color: #4f46e5; font-weight: bold; }
+        .tab-btn { color: #64748b; font-weight: 500; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Layout Grid ala Power BI */
-        .dashboard-container { padding: 12px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; max-width: 1800px; margin: 0 auto;}
-        
-        /* Card Styling Power BI */
-        .pbi-card { background: #ffffff; box-shadow: 0 1.2px 3.6px rgba(0,0,0,0.1), 0 0.3px 0.9px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; }
-        .pbi-header { font-size: 14px; font-weight: 600; color: #323130; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-        
-        /* Sidebar Filter */
-        .filter-pane { background: transparent; height: calc(100vh - 80px); position: sticky; top: 70px; overflow-y: auto; display: flex; flex-col; gap: 12px;}
-        .filter-box { background: #ffffff; border: 1px solid #e1dfdd; border-radius: 4px; padding: 12px; }
-        .filter-label { font-size: 11px; font-weight: 600; color: #605e5c; text-transform: uppercase; margin-bottom: 6px; display: block;}
-        
-        /* Custom Inputs */
-        .pbi-select, .pbi-input { width: 100%; border: 1px solid #8a8886; border-radius: 2px; padding: 6px 8px; font-size: 13px; color: #323130; outline: none; transition: border-color 0.2s; background: #fff;}
-        .pbi-select:focus, .pbi-input:focus { border-color: #0078d4; border-bottom-width: 2px; padding-bottom: 5px; }
-        
-        /* Top Summary Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
-        .kpi-card { text-align: center; padding: 16px 12px; display: flex; flex-direction: column; justify-content: center;}
-        .kpi-value { font-size: 32px; font-weight: 400; color: #323130; line-height: 1.1; font-family: 'Segoe UI', sans-serif;}
-        .kpi-label { font-size: 12px; color: #0078d4; font-weight: 600; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
-        
-        /* Data Table */
-        .table-container { max-height: 380px; overflow-y: auto; border: 1px solid #e1dfdd; border-radius: 2px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background-color: #f3f2f1; color: #323130; font-weight: 600; text-align: left; padding: 8px 12px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #e1dfdd; }
-        td { padding: 8px 12px; border-bottom: 1px solid #edebe9; color: #323130; vertical-align: top;}
-        tr:hover { background-color: #f3f2f1; }
-        
-        /* Buttons */
-        .pbi-btn-primary { background-color: #0f6cbd; color: white; border: none; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 2px; cursor: pointer; transition: background-color 0.2s; width: 100%; text-align: left;}
-        .pbi-btn-primary:hover { background-color: #115ea3; }
-        .pbi-btn-outline { background-color: white; color: #323130; border: 1px solid #8a8886; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 2px; cursor: pointer; transition: background-color 0.2s; width: 100%; text-align: left;}
-        .pbi-btn-outline:hover { background-color: #f3f2f1; }
-        .pbi-action-icon { color: #0f6cbd; padding: 4px; cursor: pointer; font-size: 13px; opacity: 0.8;}
-        .pbi-action-icon:hover { opacity: 1; background: #e1dfdd; border-radius: 2px;}
-        
-        /* Top Navigation Bar */
-        .top-nav { background-color: #115ea3; color: white; padding: 0 24px; height: 48px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .top-nav h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.5px;}
-        
-        /* Custom Multi-select Dropdown */
-        .dropdown-check-list { display: inline-block; position: relative; width: 100%; }
-        .dropdown-check-list .anchor { width: 100%; border: 1px solid #8a8886; padding: 6px 8px; border-radius: 2px; background: white; cursor: pointer; display: inline-block; font-size: 13px; color: #323130;}
-        .dropdown-check-list .anchor:after { content: ""; border-top: 5px solid #605e5c; border-left: 4px solid transparent; border-right: 4px solid transparent; position: absolute; right: 10px; top: 40%; }
-        .dropdown-check-list ul.items { padding: 4px 0; display: none; margin: 0; border: 1px solid #8a8886; background: white; position: absolute; top: 100%; left: 0; width: 100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 50; max-height: 200px; overflow-y: auto;}
-        .dropdown-check-list ul.items li { list-style: none; padding: 4px 10px; font-size: 12px; display: flex; align-items: center;}
-        .dropdown-check-list ul.items li:hover { background-color: #f3f2f1; }
+        /* Custom Multi-select Dropdown Styles */
+        .dropdown-check-list { display: inline-block; position: relative; }
+        .dropdown-check-list .anchor { width: 100%; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; background: white; cursor: pointer; display: inline-block; font-size: 0.875rem;}
+        .dropdown-check-list .anchor:after { content: ""; border-top: 5px solid #000; border-left: 4px solid transparent; border-right: 4px solid transparent; position: absolute; right: 10px; top: 40%; }
+        .dropdown-check-list ul.items { padding: 8px; display: none; margin: 0; border: 1px solid #cbd5e1; background: white; position: absolute; top: 100%; left: 0; width: 100%; border-radius: 0.5rem; z-index: 50; max-height: 200px; overflow-y: auto;}
+        .dropdown-check-list ul.items li { list-style: none; padding: 4px 0; font-size: 0.875rem;}
+        .dropdown-check-list.visible .anchor { color: #4f46e5; border-color: #4f46e5;}
         .dropdown-check-list.visible .items { display: block; }
         
-        /* Modals */
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); z-index: 100; backdrop-filter: blur(2px);}
+        .disabled-input { background-color: #f1f5f9; opacity: 0.7; cursor: not-allowed; }
         
-        /* Scrollbars */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #c8c6c4; border-radius: 4px; border: 2px solid #fff;}
-        ::-webkit-scrollbar-thumb:hover { background: #a19f9d; }
+        /* Container untuk Grafik Jaringan */
+        #networkGraph { width: 100%; height: 350px; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #ffffff; }
     </style>
 </head>
-<body>
+<body class="text-slate-800 p-4 md:p-8">
 
-    <!-- Top Navigation -->
-    <div class="top-nav">
-        <div class="flex items-center gap-4">
-            <i class="fas fa-th text-lg opacity-80 cursor-pointer hover:opacity-100"></i>
-            <h1 class="border-l border-white border-opacity-30 pl-4 ml-2 py-1">Manajemen Eksekutif Hibah Penelitian & PkM FSTI 2026</h1>
-        </div>
-        <div class="flex items-center gap-4 text-xs font-semibold">
-            <span class="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1 rounded"><i class="fas fa-database text-green-300"></i> Cloud Synced</span>
-            <div class="w-7 h-7 rounded-full bg-white text-blue-800 flex items-center justify-center font-bold shadow">F</div>
-        </div>
-    </div>
-
-    <!-- Main Workspace -->
-    <div class="dashboard-container">
-        
-        <!-- SIDEBAR (Left Pane) -->
-        <div class="filter-pane flex flex-col gap-3">
-            
-            <div class="filter-box border-t-4 border-t-blue-500">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fas fa-filter text-blue-500 mr-1.5"></i> Data Filter</span>
-                    <button onclick="resetFilters()" class="text-[10px] text-blue-600 hover:underline"><i class="fas fa-undo"></i> Reset</button>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="filter-label">Pencarian Bebas</label>
-                    <div class="relative">
-                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Cari nama / judul..." class="pbi-input pl-7">
-                        <i class="fas fa-search absolute left-2 top-2 text-gray-400 text-xs"></i>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="filter-label">Sumber Dana</label>
-                    <select id="filterSumber" onchange="applyFilters()" class="pbi-select">
-                        <option value="All">Semua Sumber</option>
-                        <option value="Internal ITK">Internal ITK</option>
-                        <option value="Eksternal BIMA">Eksternal BIMA</option>
-                        <option value="Lainnya">Lainnya</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="filter-label">Jenis Kegiatan</label>
-                    <select id="filterJenis" onchange="applyFilters()" class="pbi-select">
-                        <option value="All">Semua Jenis</option>
-                        <option value="Penelitian">Penelitian</option>
-                        <option value="Pengmas">Pengmas</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="filter-label">Jurusan Utama</label>
-                    <select id="filterJurusan" onchange="applyFilters()" class="pbi-select">
-                        <option value="All">Semua Jurusan</option>
-                        <option value="JSAD">JSAD</option>
-                        <option value="JTIEB">JTIEB</option>
-                        <option value="Tenaga Kependidikan">Tendik</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="filter-label">Program Studi</label>
-                    <div id="filterProdiWrapper" class="dropdown-check-list" tabindex="100">
-                        <span class="anchor" onclick="toggleProdiDropdown()">Semua Prodi Terpilih</span>
-                        <ul id="filterProdi" class="items"></ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons Panel -->
-            <div class="filter-box border-t-4 border-t-emerald-500 flex flex-col gap-2">
-                <span class="font-bold text-xs text-gray-700 uppercase tracking-wide mb-1"><i class="fas fa-bolt text-emerald-500 mr-1.5"></i> Quick Actions</span>
-                
-                <button onclick="openModal()" class="pbi-btn-primary shadow-sm"><i class="fas fa-plus w-4 text-center mr-1"></i> Entri Data Baru</button>
-                <button onclick="exportToExcel()" class="pbi-btn-outline"><i class="fas fa-file-excel w-4 text-center text-emerald-600 mr-1"></i> Export Data CSV</button>
-                <a href="https://drive.google.com/file/d/15z0g4qMvbcFCzEwEV_enb1DsCw9Qop6W/view?usp=drive_link" target="_blank" class="pbi-btn-outline"><i class="fas fa-file-pdf w-4 text-center text-rose-500 mr-1"></i> Baca Dokumen Roadmap</a>
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <img src="logo_itk.png" alt="Logo ITK" width="120" class="mb-4" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png'; this.style.display='block';">
+                <h1 class="text-3xl font-bold text-slate-900"><i class="fas fa-network-wired text-indigo-600 mr-2"></i>Halaman Informasi Hibah Penelitian dan PkM FSTI 2026</h1>
+                <p class="text-slate-500 mt-1">Manajemen Data Penelitian & Pengabdian FSTI ITK</p>
             </div>
             
-            <div class="filter-box border-t-4 border-t-fuchsia-500 flex flex-col gap-2">
-                <span class="font-bold text-xs text-gray-700 uppercase tracking-wide mb-1"><i class="fas fa-chart-pie text-fuchsia-500 mr-1.5"></i> Analitik Eksekutif</span>
+            <div class="flex gap-3 flex-wrap justify-end items-center">
+                <select id="filterSumber" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
+                    <option value="All">Semua Sumber</option><option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option><option value="Lainnya">Lainnya</option>
+                </select>
+                <select id="filterJurusan" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
+                    <option value="All">Semua Jurusan & Tendik</option><option value="JSAD">JSAD</option><option value="JTIEB">JTIEB</option><option value="Tenaga Kependidikan">Tendik</option>
+                </select>
                 
-                <button onclick="openRoadmap()" class="pbi-btn-outline"><i class="fas fa-project-diagram w-4 text-center text-blue-500 mr-1"></i> Network Kolaborasi</button>
-                <button onclick="openRenstra()" class="pbi-btn-outline"><i class="fas fa-bullseye w-4 text-center text-fuchsia-500 mr-1"></i> Pemetaan Renstra</button>
-                <button onclick="openRelevansi()" class="pbi-btn-outline"><i class="fas fa-hands-helping w-4 text-center text-teal-500 mr-1"></i> Analisis Dampak SDGs</button>
+                <div id="filterProdiWrapper" class="dropdown-check-list bg-white text-sm" tabindex="100">
+                    <span class="anchor" onclick="toggleProdiDropdown()">Pilih Prodi...</span>
+                    <ul id="filterProdi" class="items">
+                        </ul>
+                </div>
+
+                <select id="filterJenis" onchange="applyFilters()" class="border border-slate-300 rounded-lg px-4 py-2 bg-white text-sm">
+                    <option value="All">Semua Jenis</option><option value="Penelitian">Penelitian</option><option value="Pengmas">Pengmas</option>
+                </select>
+                <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Cari judul / ketua..." class="border border-slate-300 rounded-lg px-4 py-2 w-64 text-sm">
             </div>
-            
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-card p-6 border-l-4 border-indigo-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Pendanaan</p><h3 class="text-2xl font-bold" id="cardTotalDana">Rp 0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-emerald-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Total Proyek</p><h3 class="text-2xl font-bold" id="cardTotalProyek">0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-blue-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Internal ITK</p><h3 class="text-2xl font-bold" id="cardDanaInternal">Rp 0</h3></div>
+            <div class="glass-card p-6 border-l-4 border-amber-500"><p class="text-xs uppercase text-slate-500 font-bold mb-1">Dana Eksternal BIMA</p><h3 class="text-2xl font-bold" id="cardDanaBima">Rp 0</h3></div>
         </div>
 
-        <!-- MAIN CONTENT AREA -->
-        <div class="flex flex-col gap-4 min-w-0">
-            
-            <!-- KPI Cards Row -->
-            <div class="kpi-grid">
-                <div class="pbi-card kpi-card">
-                    <div class="kpi-value" id="cardTotalDana">0</div>
-                    <div class="kpi-label">Total Revenue (Hibah)</div>
-                </div>
-                <div class="pbi-card kpi-card">
-                    <div class="kpi-value" id="cardTotalProyek">0</div>
-                    <div class="kpi-label">Total Volume Proyek</div>
-                </div>
-                <div class="pbi-card kpi-card">
-                    <div class="kpi-value text-emerald-600" id="cardDanaInternal">0</div>
-                    <div class="kpi-label">Dana Internal ITK</div>
-                </div>
-                <div class="pbi-card kpi-card">
-                    <div class="kpi-value text-purple-600" id="cardDanaBima">0</div>
-                    <div class="kpi-label">Dana Eksternal BIMA</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass-card p-6 md:col-span-2">
+                <h3 class="text-lg font-bold mb-4">Alokasi Dana per Program Studi</h3>
+                <div style="height: 300px;"><canvas id="barChart"></canvas></div>
+            </div>
+            <div class="glass-card p-6">
+                <h3 class="text-lg font-bold mb-4">Sumber Hibah</h3>
+                <div style="height: 300px; display:flex; justify-content:center;"><canvas id="pieChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="glass-card p-6">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                <h3 class="text-lg font-bold text-slate-700">Daftar Detail Proyek</h3>
+                <div class="flex gap-2 flex-wrap">
+                    
+                    <a href="https://drive.google.com/file/d/15z0g4qMvbcFCzEwEV_enb1DsCw9Qop6W/view?usp=drive_link" target="_blank" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i> Dokumen Roadmap PDF
+                    </a>
+                    
+                    <button onclick="openRoadmap()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-project-diagram"></i> Jaringan Kolaborasi
+                    </button>
+
+                    <button onclick="openRenstra()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-bullseye"></i> Kesesuaian Roadmap FSTI
+                    </button>
+                    <button onclick="openRelevansi()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-hands-helping"></i> Relevansi Masyarakat
+                    </button>
+                    
+                    <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> Ekspor CSV
+                    </button>
+                    <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Tambah Data
+                    </button>
                 </div>
             </div>
-
-            <!-- Charts Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                
-                <!-- Donut Chart -->
-                <div class="pbi-card flex flex-col h-[280px]">
-                    <div class="pbi-header">
-                        <span>Proporsi Sumber Dana</span>
-                        <i class="fas fa-ellipsis-h text-gray-400"></i>
-                    </div>
-                    <div class="flex-1 relative w-full flex justify-center items-center">
-                        <div class="w-[85%] h-[85%]"><canvas id="pieChart"></canvas></div>
-                    </div>
-                    <!-- Custom PBI Legend -->
-                    <div id="pieLegend" class="flex justify-center gap-4 text-[10px] font-semibold text-gray-600 mt-2"></div>
-                </div>
-
-                <!-- Bar Chart -->
-                <div class="pbi-card lg:col-span-2 h-[280px] flex flex-col">
-                    <div class="pbi-header">
-                        <span>Distribusi Total Dana per Program Studi / Unit</span>
-                        <i class="fas fa-ellipsis-h text-gray-400"></i>
-                    </div>
-                    <div class="flex-1 w-full relative">
-                        <canvas id="barChart"></canvas>
-                    </div>
-                </div>
+            <div class="table-container rounded-lg border border-slate-200">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Ketua</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b w-1/3">Judul</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Prodi/Tendik</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b">Sumber & Skema</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b text-right">Dana (Rp)</th>
+                            <th class="p-3 text-sm font-semibold text-slate-600 border-b text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-sm divide-y divide-slate-100"></tbody>
+                </table>
             </div>
-
-            <!-- Data Table -->
-            <div class="pbi-card flex-1">
-                <div class="pbi-header mb-3">
-                    <span>Rincian Transaksi Proyek</span>
-                    <span id="recordCount" class="text-xs font-normal text-gray-500 font-mono bg-gray-100 px-2 py-0.5 rounded">0 records</span>
-                </div>
-                <div class="table-container">
-                    <table id="dataTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 15%">Ketua Peneliti</th>
-                                <th style="width: 45%">Judul Riset / PkM</th>
-                                <th style="width: 15%">Afiliasi Unit</th>
-                                <th style="width: 10%">Kategori</th>
-                                <th style="width: 10%; text-align: right;">Total Dana</th>
-                                <th style="width: 5%; text-align: center;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- Injected via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <!-- MODAL FORM ENTRI DATA -->
-    <div id="dataModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden">
-        <div class="bg-white shadow-2xl w-full max-w-2xl p-6 relative border-t-4 border-t-blue-600 rounded">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-lg"></i></button>
-            <h2 id="modalTitle" class="text-xl font-bold mb-5 text-gray-800 border-b border-gray-100 pb-2">Formulir Entri Data</h2>
+    <!-- MODAL TAMBAH/EDIT DATA -->
+    <div id="dataModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl p-6 relative overflow-y-auto max-h-[95vh]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 id="modalTitle" class="text-2xl font-bold mb-6 text-slate-800 border-b pb-3">Tambah Data Hibah</h2>
             
-            <form id="dataForm" onsubmit="saveData(event)" class="text-sm">
+            <form id="dataForm" onsubmit="saveData(event)">
                 <input type="hidden" id="formId">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <h3 class="text-md font-semibold text-indigo-700 mb-3"><i class="fas fa-info-circle mr-2"></i>Informasi Dasar</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="col-span-2 md:col-span-1">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Lengkap Ketua</label>
-                        <input type="text" id="formKetua" required class="pbi-input bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Ketua</label>
+                        <input type="text" id="formKetua" required class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                     </div>
                     <div class="col-span-2 md:col-span-1">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Program Studi / Unit</label>
-                        <input type="text" id="formProdi" required list="prodiOptionsList" class="pbi-input bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Program Studi / Unit</label>
+                        <input type="text" id="formProdi" required list="prodiOptionsList" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                         <datalist id="prodiOptionsList"></datalist>
                     </div>
-                    
                     <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Judul Lengkap Proyek</label>
-                        <textarea id="formJudul" rows="2" required class="pbi-input bg-gray-50 focus:bg-white"></textarea>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Judul Proyek</label>
+                        <textarea id="formJudul" rows="2" required class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500"></textarea>
                     </div>
-
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Jurusan Induk</label>
-                        <select id="formJurusan" required class="pbi-select bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Jurusan / Kelompok</label>
+                        <select id="formJurusan" required class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                             <option value="JSAD">JSAD</option><option value="JTIEB">JTIEB</option><option value="Tenaga Kependidikan">Tenaga Kependidikan</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Jenis Kegiatan</label>
-                        <select id="formJenis" required class="pbi-select bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Kegiatan</label>
+                        <select id="formJenis" required class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                             <option value="Penelitian">Penelitian</option><option value="Pengmas">Pengmas</option>
                         </select>
                     </div>
+                </div>
 
+                <h3 class="text-md font-semibold text-emerald-700 mb-3"><i class="fas fa-wallet mr-2"></i>Sumber & Anggaran</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Sumber Pembiayaan</label>
-                        <select id="formSumber" required onchange="toggleKontrakUpload()" class="pbi-select bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sumber Hibah</label>
+                        <select id="formSumber" required onchange="toggleKontrakUpload()" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                             <option value="Internal ITK">Internal ITK</option><option value="Eksternal BIMA">Eksternal BIMA</option><option value="Lainnya">Lainnya</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nominal Disetujui (Rp)</label>
-                        <input type="number" id="formDana" required min="0" class="pbi-input bg-gray-50 focus:bg-white font-mono">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Total Dana (Rp)</label>
+                        <input type="number" id="formDana" required min="0" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                     </div>
-                    
                     <div class="col-span-2">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Detail Skema (Opsional)</label>
-                        <input type="text" id="formSkema" list="skemaOptions" placeholder="Pilih atau ketik manual..." class="pbi-input bg-gray-50 focus:bg-white">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Skema Penelitian / PkM</label>
+                        <input type="text" id="formSkema" list="skemaOptions" placeholder="Pilih skema atau ketik manual..." class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
                         <datalist id="skemaOptions">
-                            <option value="Penelitian Fundamental - Reguler"></option>
                             <option value="Pemberdayaan Kemitraan Masyarakat"></option>
+                            <option value="Penelitian Fundamental - Reguler"></option>
+                            <option value="Penelitian Unggulan Fokus Riset (PUFR)"></option>
+                            <option value="Program Mahasiswa Mengabdi Desa (PMMD)"></option>
+                            <option value="Program Pengembangan Kewirausahaan (PPK)"></option>
+                            <option value="Prototipe"></option>
+                            <option value="Riset Dosen Pemula (RDP)"></option>
+                            <option value="Riset Inovasi (RI)"></option>
+                            <option value="Riset Kerjasama Dalam Negeri (RKDN)"></option>
+                            <option value="Riset Pendukung IKN (RPI)"></option>
+                            <option value="Riset Stimulus Start Up (RSS)"></option>
+                            <option value="Riset Tenaga Kependidikan (RTK)"></option>
+                            <option value="Riset Konektivitas Nusantara (Riset Dasar)"></option>
+                            <option value="Riset Pascasarjana (RP)"></option>
+                            <option value="BIMA-Prototipe"></option>
+                            <option value="BIMA-Penelitian Fundamental - Reguler"></option>
                             <option value="BIMA-Penelitian Dosen Pemula"></option>
+                            <option value="BIMA-Pemberdayaan Kemitraan Masyarakat"></option>
+                            <option value="BIMA-Pemberdayaan Masyarakat oleh Mahasiswa "></option>
+                            <option value="Grant Riset Sawit (GRS)"></option>
+                            <option value="Brida"></option>
                         </datalist>
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end gap-2 pt-4 border-t border-gray-100">
-                    <button type="button" onclick="closeModal()" class="pbi-btn-outline w-auto px-4">Batal</button>
-                    <button type="submit" class="pbi-btn-primary w-auto px-6">Simpan Transaksi</button>
+                <h3 class="text-md font-semibold text-amber-700 mb-3"><i class="fas fa-cogs mr-2"></i>Pelaksanaan & Administrasi</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Keterlibatan Mahasiswa (Jumlah)</label>
+                        <input type="number" id="formMahasiswa" min="0" placeholder="Misal: 3" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Status Kontrak Eksternal</label>
+                        <select id="formKontrakStatus" class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500 text-sm">
+                            <option value="Tidak Perlu">Tidak Perlu (Internal)</option>
+                            <option value="Belum Diunggah">Belum Diunggah</option>
+                            <option value="Sudah Diunggah">Sudah Diunggah</option>
+                        </select>
+                        
+                        <!-- TOMBOL LINK GOOGLE DRIVE -->
+                        <div class="mt-3" id="driveLinkContainer" style="display: none;">
+                            <a href="https://drive.google.com/drive/folders/19MjfQGbS5JWvgidtQnZ4TbpkJK0whJZu?usp=sharing" target="_blank" class="flex items-center justify-center w-full px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                                <i class="fab fa-google-drive mr-2 text-lg"></i> Buka Folder Google Drive
+                            </a>
+                            <p class="text-[10px] text-slate-500 mt-1.5 text-center"><i class="fas fa-info-circle"></i> Unggah kontrak ke Drive, lalu ubah status menjadi "Sudah Diunggah".</p>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Fasilitas Laboratorium/Alat yang Digunakan</label>
+                        <textarea id="formFasilitas" rows="2" placeholder="Misal: Lab Komputasi Dasar, Server GPU, Multimeter..." class="w-full border rounded-lg px-3 py-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2 border rounded-lg text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" id="submitBtn" class="px-5 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 shadow-sm"><i class="fas fa-cloud-upload-alt mr-2"></i>Simpan Data</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL ROADMAP JARINGAN -->
+    <!-- MODAL ROADMAP FAKULTAS (Jaringan Prodi Interaktif) -->
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col p-6 relative overflow-hidden border-t-4 border-t-blue-600">
-            <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10"><i class="fas fa-times text-xl"></i></button>
-            <div class="pbi-header text-xl mb-1"><i class="fas fa-project-diagram text-blue-600 mr-2"></i> Jaringan Kolaborasi Program Studi</div>
-            <p class="text-xs text-gray-500 border-b pb-3 mb-4 shrink-0">Pemetaan relasi keilmuan menggunakan algoritma Text Similarity & Network Graph.</p>
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl h-[95vh] flex flex-col p-6 relative overflow-hidden">
+            <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10"><i class="fas fa-times text-2xl"></i></button>
+            
+            <h2 class="text-2xl font-bold mb-2 text-slate-800 shrink-0"><i class="fas fa-project-diagram text-indigo-600 mr-2"></i>Jaringan Kolaborasi Prodi & Tema Riset</h2>
+            <p class="text-sm text-slate-500 border-b pb-4 mb-4 shrink-0">Pemetaan otomatis konektivitas antar Program Studi berdasarkan kemiripan judul dan kata kunci penelitian (NLP Clustering).</p>
             
             <div class="overflow-y-auto flex-1 pr-2">
-                <div class="mb-5 pbi-card border-none bg-gray-50 shadow-none border border-gray-200">
-                    <div id="networkGraph"></div>
+                <!-- Grafik Jaringan (Node Network) -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2"><i class="fas fa-network-wired text-blue-500 mr-2"></i>Visualisasi Network</h3>
+                    <div id="networkGraph" class="shadow-inner"></div>
                 </div>
+
+                <!-- Hasil Klasterisasi Tema -->
                 <div>
-                    <h3 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Rincian Komposisi Klaster Tema</h3>
-                    <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <h3 class="text-lg font-bold text-slate-700 mb-4"><i class="fas fa-layer-group text-emerald-500 mr-2"></i>Detail Sinergi Tema Strategis</h3>
+                    <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL RENSTRA & RELEVANSI -->
+    <!-- MODAL RENSTRA -->
     <div id="renstraModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col p-6 relative border-t-4 border-t-fuchsia-600">
-            <button onclick="closeRenstra()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
-            <div class="pbi-header text-xl mb-1"><i class="fas fa-bullseye text-fuchsia-600 mr-2"></i> Ketercapaian Target Renstra FSTI</div>
-            <p class="text-xs text-gray-500 border-b pb-3 mb-4">Analisis kesesuaian riset berjalan dengan agenda strategis Smart City dan Energi IKN.</p>
-            <div class="overflow-y-auto flex-1 pr-2"><div id="gridRenstra" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl h-[80vh] flex flex-col p-6 relative">
+            <button onclick="closeRenstra()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-2xl"></i></button>
+            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-bullseye text-fuchsia-600 mr-2"></i>Kesesuaian dengan Roadmap & Renstra FSTI ITK</h2>
+            <p class="text-sm text-slate-500 border-b pb-3">Pemetaan proyek penelitian aktif terhadap Visi Misi ITK, khususnya pada integrasi tema strategis <b>Smart City</b> dan <b>Energi Terbarukan</b>.</p>
+            <div class="overflow-y-auto flex-1 mt-4">
+                <div id="gridRenstra" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
         </div>
     </div>
 
+    <!-- MODAL RELEVANSI -->
     <div id="relevansiModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col p-6 relative border-t-4 border-t-teal-600">
-            <button onclick="closeRelevansi()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
-            <div class="pbi-header text-xl mb-1"><i class="fas fa-globe-asia text-teal-600 mr-2"></i> Dampak Sosial & Pemetaan SDGs</div>
-            <p class="text-xs text-gray-500 border-b pb-3 mb-4">Evaluasi sumbangsih portofolio riset terhadap ketahanan masyarakat dan industri lokal.</p>
-            <div class="overflow-y-auto flex-1 pr-2"><div id="gridRelevansi" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-5xl h-[80vh] flex flex-col p-6 relative">
+            <button onclick="closeRelevansi()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-2xl"></i></button>
+            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-globe-asia text-teal-600 mr-2"></i>Relevansi Riset & PkM Terhadap Masyarakat</h2>
+            <p class="text-sm text-slate-500 border-b pb-3">Pemetaan kontribusi langsung proyek pendanaan FSTI ITK terhadap isu-isu strategis, Sustainable Development Goals (SDGs), dan pemberdayaan masyarakat nyata.</p>
+            <div class="overflow-y-auto flex-1 mt-4">
+                <div id="gridRelevansi" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Setup Chart.js Power BI look
-        Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-        Chart.defaults.color = "#605e5c";
-        
         const rawDefaultDataset = [{"Ketua": "Chairoh Ulfah, S.Si., M.Sc.", "Judul": "Optimalisasi Biokompatibilitas Nano- CHAp berbasis Cangkang Kerang Mutiara Air Tawar Margaritifera margaritifera sebagai Material Kandidat Implan Tulang", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Harrys Samosir, M.Sc.", "Judul": "Pengembangan Lapisan Tipis Nasbs₂ dan Sn–Sb–S Berbasis Metode Silar Sebagai Material Aktif Sel Surya Berbiaya Rendah", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Indrawan, S.Pd. M.Si.", "Judul": "Perbandingan Model Deep Learning GRU–GARCH dan DES–GARCH dalam Pemodelan Return dan Volatilitas Saham Syariah: Studi Kasus Telkom Indonesia (TLKM)", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Magdalena Effendi, S.Stat., M.Stat.", "Judul": "Analisis Spasial Financial Distress Rumah Tangga di Kabupaten Penajam Paser Utara dalam Dinamika Pembangunan Ibu Kota Nusantara (IKN)", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Mega Pratiwi, M.Pd", "Judul": "Peningkatan Mutu Pembelajaran Mata Kuliah Bahasa Indonesia melalui Buku Panduan Dosen", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Nurul Maqfirah Rauf, M.Mat.", "Judul": "Pemodelan Risiko Mortalitas Pasien Penyakit Paru Menggunakan Cox Regression dan Gradient Boosting Survival Di RS Pertamina Balikpapan", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Putri Amalia, S.Si., M.Si.", "Judul": "Pemodelan Dinamika Tata Ruang IKN dengan Pendekatan Kontrol Optimal untuk Mendukung Target 65% Forest City", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Yumna Aqila Kaltsum, S.Si., M.Stat.", "Judul": "Analisis Peran Artificial Intelligence dan Infrastruktur Digital dalam Meningkatkan Keterlibatan Akademik dan Efektivitas Belajar Mahasiswa Institut Teknologi Kalimantan", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Isti Kamila, S.Pd., M.Si.", "Judul": "Integrasi Machine Learning dan Pemodelan Aktuaria dalam Penentuan Premi Asuransi Berbasis Indeks Curah Hujan untuk Mitigasi Risiko Petani Karet di Kalimantan Timur", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Kartika Nugraheni, S.Si., M.Si.", "Judul": "Pemodelan Matematika dan Analisis Kestabilan Penyebaran Penyakit Antraks pada Populasi Ternak dengan Strategi Vaksinasi untuk Mendukung Ketahanan Pangan", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dr. Retno Wahyu Dewanti, S.Si., M.Si.", "Judul": "Model Matematika Transmisi Penyebaran Covid-19 dengan Aspek Pencegahan Infeksi", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Surya Puspita Sari, S.Si., M.Si.", "Judul": "Deteksi Spasial Non-Revenue Water (NRW) Berbasis Sensor Tekanan dan Debit Menggunakan Diagram Kontrol MEWMA di Kota Balikpapan", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Winarni, S.Si., M.Si.", "Judul": "Pemanfaatan Sains Data Untuk Pemetaan dan Analisis Potensi Wilayah Rawan Gempa Bumi di Indonesia dalam Mendukung Mitigasi Bencana Berbasis Data", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Yanuar Bhakti Wira Tama, M.Si.", "Judul": "Kriptosistem Citra Grayscale Hibrida Berbasis Permutasi Chaos dan Difusi Matriks pada Gelanggang Z/256Z untuk Keamanan Data Visual", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Adam, S.Si., M.Si.", "Judul": "Optimasi Sistem Evakuasi Gedung Pemerintahan di Ibu Kota Nusantara Menggunakan Model Graf dan Program Linear", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 24999995, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Aditya Putra Pratama, S.Si., M.Si.", "Judul": "Pengembangan Model VARIMA untuk Prediksi Multivariat Kualitas Air di Wilayah Penyangga IKN", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Diana Nurlaily, S.Si., M.Stat.", "Judul": "Tipologi Wilayah Pertanian di Kalimantan Timur untuk Mendukung Ketahanan Pangan dalam Pembangunan Ibu Kota Nusantara", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 23000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Febrian Dedi Sastrawan, S.Si., M.Sc.", "Judul": "Klasifikasi Jenis Tanah Berdasarkan Nilai VS30 Berdasarkan Data Downhole Seismik", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Irma Fitria, S.Si., M.Si.", "Judul": "Smart Investment Optimization: Model Manajemen Investasi Berbasis Nilai Prediksi untuk Mendukung Smart Economy pada Pembangunan Ibu Kota Nusantara", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Mega Silfiani,S.Si., M.Si., M.Sc", "Judul": "Peramalan Produksi Padi Berbasis Iklim di Kalimantan Timur untuk Mendukung Ketahanan Pangan Ibukota Negara (IKN)", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dr. Moh. Januar Ismail Burhan, S.Si., M.Si.", "Judul": "Epimap Nusantara: Desain Platform Cerdas Peringatan Dini Dan Intervensi Penyakit Menular Menggunakan Pemodelan Reaksi-Difusi Spasial Pada Graf Metrik", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dian Mart Shoodiqin, S.Si., M.Si.", "Judul": "Rancang Bangun Prototipe Plasma Activated Water (PAW) Skala Laboratorium dan Evaluasi Pengaruhnya Terhadap Stabilitas Fisik dan Struktur Kimia Permukaan Sayuran Segar", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Fadli Robiandi, S.Si., M.Si.", "Judul": "Generator Plasma DBD Non-Termal Berbasis Pulsa Listrik Terkontrol Untuk Reaktor Produksi Hidrogen Bersih", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Farida Nur Hidayah, S.H., M.H", "Judul": "Pengembangan Standar Implementasi Terintegrasi Mata Kuliah Wajib Kurikulum (MKWK) di Institut Teknologi Kalimantan", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 23500000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Meidi Arisalwadi, S.Si. M.Si.", "Judul": "Penerapan Teknologi Tepat Guna Mesin Pencacah Pakan Dalam Mendukung Productivity Peternak Pada Rt. 18 Kelurahan Karang Joang", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Kevin Agung Fernanda Rifki, S.Stat, M.Stat", "Judul": "Pengembangan Aplikasi Gamifikasi untuk Meningkatkan Kemandirian Anak Down Syndrome dalam Aktivitas Sehari-hari", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Alvianus Kristian Sumual, S.E., M.E", "Judul": "Implementasi Sistem Filter Air Sederhana Berbasis Teknologi Tepat Guna (TTG) untuk Pemenuhan Air Bersih di Dusun 2 dan 3 Desa Suko Mulyo, Kecamatan Sepaku", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Farida Nur Hidayah, S.H., M.H", "Judul": "Pengembangan Destinasi Wisata Melalui Strategi Pemasaran Digital dan Manajemen Data Terintegrasi Di Kelurahan Lamaru", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Alfi Suci Dirgantari, S.Pd., M.Pd.", "Judul": "Penerapan Incinerator Tanpa Asap sebagai Solusi Pengelolaan Sampah di Kawasan Wisata Meranti, Balikpapan", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 9966512, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Diana Nurlaily, S.Si., M.Stat.", "Judul": "Digitalisasi Tata Kelola Data Pariwisata Melalui Pengembangan Website Terintegrasi dan Pemetaan Wilayah (Tourism Mapping) di Kelurahan Manggar Baru", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Wahyu Dwi Lesmono, S.Si., M.Si.", "Judul": "Penataan Informasi dan Identitas Lingkungan Permukiman melalui Pemetaan Wilayah untuk Penguatan Tata Kelola RT 26 Karang Joang Balikpapan", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Harrys Samosir, M.Sc.", "Judul": "Formulasi Lip Balm Herbal Berbasis Buah Naga dan Ekstrak Bawang Dayak sebagai Inovasi Pemanfaatan Bahan Alam Lokal", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Putri Amalia, S.Si., M.Si.", "Judul": "Penguatan Kualitas Pendidikan Anak di RT 38 Kilo 17 Melalui Pendekatan Edukatif dan Partisipatif", "Program Studi": "Ilmu Aktuaria", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Irma Fitria, S.Si., M.Si.", "Judul": "Pengembangan Direktori Digital UMKM Berbasis Web Sebagai Sarana Peningkatan Aksesibilitas Ekonomi Kreatif Bagi Warga RT 33 Balikpapan Utara", "Program Studi": "Statistika", "Jenis": "Penelitian", "Dana": 5000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Febrian Dedi Sastrawan, S.Si., M.Sc.", "Judul": "Inovasi Pengolahan Kopi menjadi Minuman Fermentasi Kombucha sebagai Upaya Hilirisasi Produk di Kebun Kopi Kelompok Tani Harapan Sejahtera", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 15000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Winarni, S.Si., M.Si.", "Judul": "Penguatan Ketahanan Ekonomi Keluarga Melalui Literasi Keuangan Dan Perencanaan Usaha Berbasis Matematika Praktis Bagi Peserta Majelis Ta’lim Gabungan Batu Ratna Kota Balikpapan", "Program Studi": "Matematika", "Jenis": "Penelitian", "Dana": 15000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "MEIDI ARISALWADI", "Judul": "Pengembangan Sistem Monitoring Pergeseran Tanah Secara Real-Time Menggunakan Sensor Accelerometer", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 115550000, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JSAD"}, {"Ketua": "MUSYAROFAH", "Judul": "Impregnasi Perak pada Nanokomposit HA/AC/Z Berbasis Material Alam sebagai Agen Abrasif Ringan dan Antimikroba dalam Formulasi Pasta Gigi", "Program Studi": "Fisika", "Jenis": "Penelitian", "Dana": 0, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JSAD"}, {"Ketua": "Farida Nur Hayati, S.Si., M.Stat.", "Judul": "Identifikasi Profil Sosial Ekonomi Rumah Tangga dalam Menggambarkan Kondisi Kesejahteraan Masyarakat Kalimantan Timur", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 23000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Surya Puspita Sari, S.Si., M.Si", "Judul": "Pembentukan Bank Sampah Komunitas Berbasis Ekonomi Sirkular sebagai Hilirisasi Riset dan Pengabdian di Wilayah Penyangga IKN", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Mega Silfiani,S.Si., M.Si., M.Sc", "Judul": "Pemberdayaan Masyarakat Dalam Pengelolaan Wisata Dan Kebersihan Pantai Dusit Markoni Untuk Meningkatkan Ekonomi Desa", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Adam, S.Si., M.Si.", "Judul": "Penguatan Digitalisasi Dalam Pemberdayaan LKSA Tarbiyatul Ummah Pada Bidang", "Program Studi": "Matematika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Yumna Aqila Kaltsum, S.Si., M.Stat.", "Judul": "Penerapan Teknologi Irigasi Tetes (Drip Irrigation) Berbasis Greenhouse Untuk Budidaya Tanaman Hortikultura Sebagai Wadah Edukasi Pertanian Modern Di Abas Farm", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Farida Nur Hayati, S.Si., M.Stat.", "Judul": "Inovasi Berbasis Digital dan Lingkungan Dalam Pemberdayaan Masyarakat RT 37 melalui Program Kampung Bersih Berkelanjutan", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dr. Swastya Rahastama, S.Si., M.Si.", "Judul": "Pengembangan Kemampuan Sistem Cerdas Sejak Dini Melalui Edukasi Robotika di SMP Negeri 1 Kota Balikpapan", "Program Studi": "Fisika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Magdalena Effendi, S.Stat., M.Stat.", "Judul": "Penguatan Kompetensi Digital, Literasi, dan Kepedulian Lingkungan Siswa melalui Program Pengabdian kepada Masyarakat di SMP Negeri 28 Balikpapan", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Nurul Maqfirah Rauf, M.Mat.", "Judul": "Penguatan Manajemen Dan Pemasaran Digital Pada Umkm Sinar Pantai Melalui Penyuluhan, Pendampingan, Dan Analisis Usaha", "Program Studi": "Ilmu Aktuaria", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Muhammad Azka, S.Si., M.Sc.", "Judul": "Peningkatan Kesadaran Masyarakat Dalam Pemilahan Sampah Organik Untuk Pakan Maggot Dan Sampah Anorganik Botol Di Perumahan Mentari Village", "Program Studi": "Ilmu Aktuaria", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Kartika Nugraheni, S.Si., M.Si.", "Judul": "Peningkatan Literasi Digital Melalui Pelatihan Bahasa Pemrograman Python bagi Siswa SMA Negeri 2 Balikpapan", "Program Studi": "Matematika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dian Mart Shoodiqin, S.Si., M.Si.", "Judul": "Pemberdayaan Kelompok Tani Karang Joang Melaluipengembangan Peternakan Ayam Kampung Petelur Berbasis Teknologi Tepat Guna", "Program Studi": "Fisika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Riki Herliansyah, S.Si., M.Stats., Ph.D", "Judul": "Transformasi Penguatan Pengelolaan Data Guna Meningkatkan Pemutakhiran dan Pemanfaatan Data Menuju Pembangunan dan Pemberdayaan Potensi di Kelurahan Manggar", "Program Studi": "Statistika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Yanuar Bhakti Wira Tama, M.Si.", "Judul": "Program Edukasi Bahaya Penggunaan Gadget Elektronik pada Anak-anak melalui Media", "Program Studi": "Matematika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Aditya Putra Pratama, S.Si., M.Si.", "Judul": "TOGA DIGITAL: Revitalisasi Budidaya dan Edukasi Digital Tanaman Obat Keluarga Berbasis Data di RT. 19 Kelurahan Lamaru Kota Balikpapan", "Program Studi": "Matematika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Eli Zulkatri, M.Aktr", "Judul": "Pojok Baca Berdaya: Pemberdayaan Anak Panti Lewat Literasi, Numerasi, Dan Literasi Finansial", "Program Studi": "Ilmu Aktuaria", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "Dr. Retno Wahyu Dewanti, S.Si., M.Si.", "Judul": "Peningkatan Kualitas Pendidikan Sebagai Wujud Pengabdian Masyarakat Di Kelurahan Karang Joang Kecamatan Balikpapan Utara", "Program Studi": "Matematika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JSAD"}, {"Ketua": "ISTI KAMILA", "Judul": "Peningkatan Keterampilan Kelompok Swadaya Mentari KM 21 dalam Pembuatan Produk UMKM Green-Economy dari Sampah Rumah Tangga melalui Sistem Refill Station dan Manajemen Risiko Keuangan", "Program Studi": "Ilmu Aktuaria", "Jenis": "Pengmas", "Dana": 0, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JSAD"}, {"Ketua": "Agung Prabowo, S.E., M.M.", "Judul": "Gachanomics: Analisis Perilaku Pembelian Produk Gacha", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 8210000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Aninditya Anggari Nuryono, S.T., M.Eng.", "Judul": "Pengembangan Metode Safe Landing Unmanned Aerial Vehicle pada", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Deli Yansyah, S.E., M.Acc., Ak.", "Judul": "Evaluasi Tingkat Penerimaan dan Pengalaman Pengguna Sistem Coretax pada Wajib Pajak Orang Pribadi di Indonesia", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 9000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Fegy Sukris Sri Andriany, M.Ak", "Judul": "Optimasi Algoritma Penyediaan Likuiditas Aset Digital Berbasis Monte Carlo Simulation dan Inventory Theory: Mitigasi Risiko Sistemik pada Bursa Kripto Indonesia", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rosa Eliviani, S.Kom., M.T.", "Judul": "Penyusunan Manajemen Risiko Teknologi Informasi Pada Sekolah Islam Terpadu Istiqamah YPAIT Balikpapan Berdasarkan ISO 31000:2018", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Dwi Nur Amalia, S.Kom., M.Kom.", "Judul": "Implementasi Business Process Improvement untuk Redesain Proses Bisnis dalam Transformasi Web ke Mobile Employee Information System", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Gusti Ahmad Fanshuri Alfarisy, S.Kom., M.Kom. Ph.D.", "Judul": "Pengenalan Spesies Tumbuhan Skala Besar Berbasis Open-Set Recognition dengan Model Deep Learning Ringan", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Aidil Saputra Kirsan, S.ST., M.Tr.Kom.", "Judul": "Rancang Bangun Sistem Informasi Profil Fakultas Sains Dan Teknologi Informasi Institut Teknologi Kalimantan Berbasis Website Menggunakan Metode Prototyping", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Hendy Indrawan Sunardi, S.Kom, M.Eng.", "Judul": "Pengembangan Sistem Informasi Klinik Kampus Berbasis Web Untuk Meningkatkan Efektivitas Pelayanan Kesehatan di Institut Teknologi Kalimantan", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Dwi Arief Prambudi, S.Kom., M.Kom", "Judul": "Visualisasi dari Klasterisasi dan Peramalan Kualitas Udara Kota Samarinda Menggunakan Metode Klasterisasi Objek Backpropagation dan Peramalan Artificial Neural Network", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Muh. Ikhsan Alif S, S.E.,M.Sc.", "Judul": "Ketika Lelah Berujung Diam: Peran Kepuasan Kerja dan Keseimbangan Kerja dan Kehidupan, dalam Hubungan antara Kelelahan Kerja dan Penarikan Diri Secara Psikologis dari Pekerjaan (Quiet Quitting) pada Pekerja Muda Talenta Digital Berbasis Pengetahuan (Digital Knowledge Workers) di Kawasan Penyangga IKN - Kalimantan Timur", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Prasis Damai Nursyam Hamijaya, S.P., M.M.", "Judul": "Pengaruh Work-Life Balance, Technostress dan Kompetensi Digital Terhadap Kinerja Karyawan Industri Kreatif di Kawasan Penyangga IKN", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rizky Amelia, S.Si., M.Han.", "Judul": "Deteksi dan Klasifikasi Kapal  Menggunakan Citra Satelit SAR Sentinel-1 dan Deep Learning Berbasis YOLOv8 untuk Pemantauan Aktivitas Maritim di Jalur ALKI II", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Amalia Rizqi Utami, S.T., M.T.", "Judul": "Rancang Bangun Sistem Deteksi Hidrasi Kulit Berbasis IoT Menggunakan Sensor EDA", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Firilia Filiana, S.T., M.T.", "Judul": "Rancang Bangun Prototipe PLTS Off-Grid Terintegrasi Smart Monitoring sebagai Sumber Energi Mandiri untuk Fasilitas Pengolahan Sampah di Kampus ITK", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Himawan Wicaksono, S.ST., M.T.", "Judul": "WeldInspector AI: Rancang Bangun Aplikasi Mobile Mandiri Berbasis Hybrid CNN-SVM untuk Deteksi Cacat Las di Galangan Kapal", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Luh Made Wisnu Satyaninggrat, S.Kom., M.T.", "Judul": "Transformasi Digital Manajemen Stok Usaha Mikro Kecil: Pengembangan Antarmuka Adaptif untuk Mereduksi Cognitive Load dan Meningkatkan Akurasi Keputusan Bisnis", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Ir. Muhammad Ridho Dewanto, S.T., M.T.", "Judul": "Pengembangan Sistem Autentikasi Alat Tukar Lokal (Uang Kayu) Berbasis QR Code dan Perceptual Hashing (pHash) untuk Mendukung Ekosistem Smart Economy di Kawasan Wisata Pringgondani", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nisa Rizqiya Fadhliana, S.Kom., M.T.", "Judul": "Pengembangan Game Digital Naratif Interaktif sebagai Media Inovatif Membangun Environmental Awareness", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nursanti Novi Arisa, S.Pd., M.Kom.", "Judul": "Perancangan UI/UX Media Visual Berbasis Digital dengan Pendekatan Discrete Trial Training untuk Anak dengan Gangguan Bahasa", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Risty Jayanti Yuniar, S.T., M.T.", "Judul": "Pengembangan Sistem Kontrol Suhu Alat Pengering Lada Menggunakan Metode Adaptive Neuro Fuzzy Inference System Berbasis Iot", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Riza Hadi Saputra, S.T., M.T.", "Judul": "Analisis Stabilitas Rest Time pada Siklus Charge- Discharge Terhadap State Of Health (SOH) Baterai", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rizal Kusuma Putra, M.T.", "Judul": "Rancang Bangun Unmanned Aerial Vehicle untuk Sistem Navigasi Otonom pada Lingkungan Kompleks Berbasis Visual Perception", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Thorikul Huda, S.T., M.T.", "Judul": "Pengembangan Drone Kargo Otonom Berbasis Visi untuk Pengiriman Paket di Kota Cerdas Nusantara", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 24570000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Yun Tonce Kusuma Priyanto, S.T., M.T.", "Judul": "Rancang Bangun Prototipe Mesin Pencacah Sampah Dual-Fungsi (Organik dan Plastik) Terintegrasi untuk Mendukung Sistem pengelolaan Limbah Mandiri di ITK", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Yustina Fitriani, S.Pd., M.Pd.", "Judul": "Pengembangan Buku Ajar Bahasa Inggris Berbasis Kearifan Lokal Rumah Tradisional Lamin untuk Meningkatkan Pemahaman Membaca Pembelajar EFL", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Ir. Riovan Styx Roring, S.T., M.Kom", "Judul": "Pengembangan Minimum Viable Product Platform melalui Startup Hosting Rakyat untuk Mendukung Akselerasi Startup Tenant di IBT ITK", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "M. Ihsan Alfani Putera, S.Tr.Kom, M.Kom", "Judul": "Implementasi Knowledge Management System (KMS) Berbasis AI untuk Pelayanan Perizinan pada DPMPTSP Kota Balikpapan dengan Metode Personal Extreme Programming", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 30000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Arif Wicaksono Septyanto, M.Kom", "Judul": "Pengembangan Aplikasi Mobile Tanamin Untuk Transparansi Dan Donasi CSR Dengan Metode Scrum", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 30000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Amalia Rizqi Utami, S.T., M.T.", "Judul": "Optimasi Produksi Olahan Lele Melalui Implementasi Teknologi Smart-Processing dan Sistem Manajemen Inventaris Digital", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Yuyun Tri Wiranti, S.Kom., M.MT.", "Judul": "Strategi Integrasi Branding Digital dan Inovasi Pangan Lokal dalam Optimalisasi Potensi Agrowisata Kang Bejo", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rizky Amelia, S.Si., M.Han.", "Judul": "Rancang Bangun Sistem Dashboard Monitoring Deteksi Penyakit Daun Cabai Berbasis IoT dan Deep Learning sebagai Upaya Peningkatan Productivity Pertanian di Gapoktan Tani Makmur", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Andhika Giyantara, S.T., M.T.", "Judul": "Rancang Bangun Sistem Filter: Air Sumur Resapan Pada Kawasan Perumahan Bukit Anugerah Indah Melati", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nur Fajri Azhar, S.Kom., M.Kom.", "Judul": "Pemanfaatan Website dan Platform Digital untuk Penguatan Layanan Sosial dan Administrasi Warga RT 55 Balikpapan", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nursanti Novi Arisa, S.Pd., M.Kom.", "Judul": "Optimalisasi Pengolahan Produk Keripik Buah Melalui Evaluasi Produksi Dan Strategi Pemasaran Pada Kelompok Tani Km 24 Balikpapan Utara", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nisa Rizqiya Fadhliana, S.Kom., M.T.", "Judul": "Implementasi Pembelajaran Inovatif Berbasis Teknologi di SDN 006 Balikpapan Timur", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Muchammad Chandra Cahyo Utomo M.Kom", "Judul": "Digitalisasi Sistem Informasi RT. 06 Kelurahan Damai Bahagia Berbasis Web untuk Pelayanan Administrasi dan Partisipasi Warga", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 3500000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Arif Wicaksono Septyanto, M.Kom", "Judul": "Optimalisasi Kawasan Kelompok Tani Harapan Sejahtera melalui Sistem Informasi Terpadu Berbasis Website dan Label Tanaman Berbasis QR Code", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Agung Prabowo, S.E., M.M.", "Judul": "Pengembangan Platform Galeri Digital Untuk Mendukung Pemasaran Produk Lokal UMKM di Kota Balikpapan", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 7135000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Hendy Indrawan Sunardi, S.Kom, M.Eng.", "Judul": "Digitalisasi Sistem Pendataan Pembayaran Gedung Seluruh Tenant Plaza Kebun Sayur Balikpapan", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rosa Eliviani, S.Kom., M.T.", "Judul": "Pengembangan Bank Sampah untuk Mendukung Pengelolaan Sampah Berkelanjutan di RT 44 Sepinggan Pratama", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Dwi Nur Amalia, S.Kom., M.Kom.", "Judul": "Pengembangan Website Dan Strategi Promosi Media Sosial Untuk Meningkatkan Visibilitas Dan Branding Pupuk Semok", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Prasis Damai Nursyam Hamijaya, S.P., M.M", "Judul": "Optimalisasi Sistem Manajemen Pada Usaha Anggrek di Kota Balikpapan Melalui Pendekatan Adaptif", "Program Studi": "Bisnis Digital", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Happy Aprillia, S.ST., M.T., M.Eng., Ph.D.", "Judul": "Peningkatan Productivity dan Daya Saing Buah Naga melalui Integrasi Automasi Perkebunan dan Branding Produk Olahan di RT 41 Kilo 21 Balikpapan", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Muhammad Agung Nursyeha, S.T., M.T.", "Judul": "Penanggulangan Hama Serangga pada Tanaman Melon melalui Inovasi Sistem Penyemprotan Pestisida Otomatis di Kebun Sumber Berkah Balikpapan", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Aninditya Anggari Nuryono, S.T., M.Eng.", "Judul": "Optimalisasi Pengelolaan Sampah Melalui Tempat Sampah Terpilah Dan Incinerator Sederhana", "Program Studi": "Informatika", "Jenis": "Penelitian", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Ir. Muhammad Ridho Dewanto, S.T., M.T.", "Judul": "Pengembangan Kandang Ayam Untuk Peningkatan Kualitas Ayam Di Panti Asuhan Nyai Walidah Dahlan, Balikpapan Timur", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 15000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Dwi Arief Prambudi, S.Kom., M.Kom", "Judul": "Mewujudkan Smart RT Melalui Digitalisasi Layanan di RT 02 Kelurahan Graha Indah Balikpapan Berbasis Website", "Program Studi": "Sistem Informasi", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Yun Tonce Kusuma Priyanto, S.T., M.T.", "Judul": "Implementasi Teknologi PLTS Terpadu pada Kelompok Tani Tunas Harapan guna Mewujudkan Desa Mandiri Energi di Karang Joang Balikpapan Utara", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Firilia Filiana, S.T., M.T.", "Judul": "Implementasi Green Technology 3S (Smart Farming, Smart Fisheries, and Smart Energy) dalam Mewujudkan Karang Joang sebagai Desa Mandiri Energi", "Program Studi": "Teknik Elektro", "Jenis": "Penelitian", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "BIMA PRIHASTO", "Judul": "Pengembangan Model Anti-Spoofing Countermeasure untuk Skenario Bahasa Indonesia Berbasis Sumber Daya Terbatas guna Meningkatkan Keamanan Otentikasi Suara", "Program Studi": "Manajemen Teknologi", "Jenis": "Penelitian", "Dana": 0, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JTIEB"}, {"Ketua": "RIKI HERLIANSYAH", "Judul": "Estimasi Kepadatan Populasi Bekantan (Nasalis larvatus) Di Teluk Balikpapan Menggunakan Line Transect Distance Sampling: Baseline Data Untuk Konservasi", "Program Studi": "Manajemen Teknologi", "Jenis": "Penelitian", "Dana": 0, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JTIEB"}, {"Ketua": "Eka Krisna Santoso, S.Si, MBA", "Judul": "Pengembangan Portal Zona Integritas FSTI ITK: Digitalisasi Area Perubahan, Standar Pelayanan, dan Pengaduan Masyarakat Berbasis Web", "Program Studi": "Bisnis Digital", "Jenis": "Pengmas", "Dana": 20000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Nur Fajri Azhar, S.Kom., M.Kom.", "Judul": "Evolusi Sistem Informasi Penelitian dan Pengabdian Masyarakat (SIMPAS) melalui Implementasi Otomasi Approval Workflow", "Program Studi": "Informatika", "Jenis": "Pengmas", "Dana": 25000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Henokh Lugo Hariyanto, M.Sc.", "Judul": "Pengembangan Sistem Informasi Course Untuk Peningkatan Kapasitas Dan Keterampilan Masyarakat Balikpapan Menggunakan Metode Waterfall", "Program Studi": "Sistem Informasi", "Jenis": "Pengmas", "Dana": 30000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Adi Mahmud Jaya Marindra, S.T., M.Eng., Ph.D.", "Judul": "Pengenalan dan Edukasi Teknologi Internet of Things (IoT) bagi Siswa Sekolah oleh UKM IEEE Institut Teknologi Kalimantan Student Branch", "Program Studi": "Teknik Elektro", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Vika Fitratunnany Insanittaqwa, S.Kom., M.Kom.", "Judul": "Pengembangan Wisata Edukasi Kang Bejo Balikpapan Berbasis Edukasi Pangan, Keamanan Lingkungan dan Digitalisasi Informasi", "Program Studi": "Sistem Informasi", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Risty Jayanti Yuniar, S.T., M.T.", "Judul": "Pemberdayaan Kelompok Tani Mekar Maju Melalui Implementasi Alat Pengering Lada", "Program Studi": "Teknik Elektro", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Darmansyah, S.Si., M.T.I", "Judul": "Pengembangan Website dan Sistem Informasi Sanitasi Lingkungan Berbasis Masyarakat sebagai Upaya Peningkatan Kebersihan dan Daya Tarik Wisata Meranti", "Program Studi": "Informatika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Riza Hadi Saputra, S.T., M.T.", "Judul": "Pemberdayaan Warga Rt 30 Karang Joang Melalui Pengembangan Lingkungan Informatif Dan Sehat Berbasis Tata Wilayah, Konstruksi, Dan Kelistrikan", "Program Studi": "Teknik Elektro", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Boby Mugi Pratama, S.Si., M.Han.", "Judul": "Pendampingan Edukasi Pengolahan Sampah bagi Anak Sekolah Dasar melalui Pembuatan Komposter Aerob di Sekolah Dasar Negeri 004 Balikpapan Barat", "Program Studi": "Informatika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Rizal Kusuma Putra, M.T.", "Judul": "Pemberdayaan Sekolah Alam Balikpapan melalui Digitalisasi Informasi dan Media Promosi Berbasis Teknologi Informasi", "Program Studi": "Informatika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Eka Krisna Santoso, S.Si, MBA", "Judul": "Edukasi dan Implementasi WhatsApp Business sebagai Strategi Digitalisasi pada Komunitas UMKM Kelurahan Graha Indah", "Program Studi": "Bisnis Digital", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Yustina Fitriani, S.Pd., M.Pd.", "Judul": "Pemberdayaan Masyarakat RT 27 Kelurahan Manggar melalui Sosialisasi dan Budidaya Tanaman Obat Keluarga (TOGA) Berbasis Platform Digital", "Program Studi": "Informatika", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Luh Made Wisnu Satyaninggrat, S.Kom., M.T", "Judul": "Sinergi Digitalisasi Informasi Dan Edukasi Lingkungan: Pengembangan Website, Perpustakaan Digital, Dan Katalog Tanaman Qr Code Di Sdn 027 Balikpapan Utara", "Program Studi": "Bisnis Digital", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Ir. I Putu Deny Arthawan Sugih Prabowo, S.Kom., M.Eng.", "Judul": "Optimalisasi Promosi Produk Ecoprint Hutan Lindung Sungai Wain Dengan Pengelolaan Media Sosial Dan Pelatihan Konten Kreatif Digital", "Program Studi": "Sistem Informasi", "Jenis": "Pengmas", "Dana": 5228000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Ir. Riovan Styx Roring, S.T., M.Kom", "Judul": "Pemberdayaan Umkm Kota Balikpapan Melalui Inovasi Sosial Berbasis Website E-Commerce", "Program Studi": "Bisnis Digital", "Jenis": "Pengmas", "Dana": 10000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "Muh. Ikhsan Alif S, S.E.,M.Sc.", "Judul": "Pemberdayaan Ekonomi Masyarakat Melalui Inovasi Produk Lilin Aromaterapi Berbasis Minyak Jelantah Dan Penguatan Manajemen Usaha Digital Di Perumahan Atlantic Village Rt.63", "Program Studi": "Bisnis Digital", "Jenis": "Pengmas", "Dana": 15000000, "Sumber Hibah": "Internal ITK", "Jurusan": "JTIEB"}, {"Ketua": "HAPPY APRILLIA", "Judul": "Peningkatan Daya Saing Buah Naga melalui Automasi Perkebunan dan Hilirisasi Produk Turunan berbasis Desain Kreatif di RT 41 Kilo 21 Balikpapan", "Program Studi": "Manajemen Teknologi", "Jenis": "Pengmas", "Dana": 0, "Sumber Hibah": "Eksternal BIMA", "Jurusan": "JTIEB"}].map((item, index) => ({ id: 'default_' + index, ...item }));
 
         // 2. Inisialisasi Firebase
@@ -368,64 +311,45 @@
             messagingSenderId: "760574296069",
             appId: "1:760574296069:web:bb3e3fbcb1857fc3bcdc6c"
         };
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 3. Setup Data Awal
-        let rawData = [];
+        // 3. Setup Data Awal (Gunakan Penyimpanan Lokal Dahulu Jika Ada)
+        let localSavedData = [];
         try {
             if (localStorage.getItem('hibahData2026')) {
-                rawData = JSON.parse(localStorage.getItem('hibahData2026'));
-            } else {
-                rawData = [...rawDefaultDataset];
+                localSavedData = JSON.parse(localStorage.getItem('hibahData2026'));
             }
-        } catch(e) { rawData = [...rawDefaultDataset]; }
+        } catch(e) { console.log(e); }
 
+        let rawData = localSavedData.length > 0 ? localSavedData : rawDefaultDataset; 
         let currentData = [...rawData];
         let barChartInstance = null;
         let pieChartInstance = null;
 
+        // Render langsung ke layar detik pertama
         document.addEventListener("DOMContentLoaded", () => {
             populateProdiFilter();
             applyFilters();
         });
 
-        // 4. Sinkronisasi Background Firebase
+        // 4. Proses Tarik Data dari Cloud secara diam-diam (Background)
         db.collection("hibah").onSnapshot((snapshot) => {
             const cloudData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             if (cloudData.length > 0) {
                 rawData = cloudData;
-                localStorage.setItem('hibahData2026', JSON.stringify(rawData));
+                localStorage.setItem('hibahData2026', JSON.stringify(rawData)); // Simpan data cloud terbaru ke lokal
                 populateProdiFilter();
                 applyFilters();
             }
-        }, (error) => { console.error("Firebase Sync Error:", error); });
-
-        // Utility: Format Rupiah Singkat untuk Grafik (Power BI Style: 1.2M, 5B)
-        const formatShortNumber = (num) => {
-            if (num >= 1000000000) return (num / 1000000000).toFixed(2) + ' M'; // Miliar
-            if (num >= 1000000) return (num / 1000000).toFixed(0) + ' Jt'; // Juta
-            return num.toLocaleString('id-ID');
-        };
-        const formatRupiah = (angka) => 'Rp ' + new Intl.NumberFormat('id-ID').format(angka || 0);
-
-        function resetFilters() {
-            document.getElementById('filterSumber').value = 'All';
-            document.getElementById('filterJurusan').value = 'All';
-            document.getElementById('filterJenis').value = 'All';
-            document.getElementById('searchInput').value = '';
-            
-            const checkboxes = document.querySelectorAll('.prodi-checkbox');
-            checkboxes.forEach(cb => cb.checked = true);
-            const checkAllEl = document.getElementById('checkAllProdi');
-            if(checkAllEl) checkAllEl.checked = true;
-            
-            applyFilters();
-        }
+        }, (error) => {
+            console.error("Gagal terhubung ke Cloud. Data lokal tetap dipertahankan:", error);
+        });
 
         function toggleKontrakUpload() {
             const sumber = document.getElementById('formSumber').value;
             const selectKontrak = document.getElementById('formKontrakStatus');
+            const helper = document.getElementById('kontrakHelper');
             const driveContainer = document.getElementById('driveLinkContainer');
             
             if (sumber === 'Internal ITK' || sumber === 'All') {
@@ -441,9 +365,11 @@
             }
         }
 
+        // 5. Logika Simpan / Edit (Cloud & Local Fallback)
         async function saveData(event) {
             event.preventDefault();
             const id = document.getElementById('formId').value;
+            const jenisInput = document.getElementById('formJenis').value;
             const submitBtn = document.querySelector('button[type="submit"]');
             
             const originalBtnText = submitBtn.innerHTML;
@@ -455,7 +381,7 @@
                 Judul: document.getElementById('formJudul').value,
                 "Program Studi": document.getElementById('formProdi').value,
                 Jurusan: document.getElementById('formJurusan').value,
-                Jenis: document.getElementById('formJenis').value,
+                Jenis: jenisInput,
                 "Sumber Hibah": document.getElementById('formSumber').value,
                 Dana: parseInt(document.getElementById('formDana').value),
                 Skema: document.getElementById('formSkema').value || "",
@@ -467,15 +393,24 @@
             try {
                 if (id && !String(id).startsWith('default_') && !String(id).startsWith('local_')) {
                     await db.collection("hibah").doc(String(id)).update(newData);
+                    alert("Data di Cloud berhasil diperbarui!");
                 } else {
                     await db.collection("hibah").add(newData);
+                    alert("Data baru berhasil ditambahkan ke Cloud!");
                 }
                 closeModal();
             } catch (error) {
+                console.error("Gagal simpan ke Cloud: ", error);
+                alert("Cloud sedang gangguan, data otomatis disimpan ke memori lokal komputer Anda.");
+                
+                // Fallback Simpan ke LocalStorage agar edit tidak hilang
                 newData.id = id || ('local_' + Date.now());
                 const index = rawData.findIndex(r => String(r.id) === String(newData.id));
-                if(index !== -1) rawData[index] = { ...rawData[index], ...newData };
-                else rawData.unshift(newData);
+                if(index !== -1) {
+                    rawData[index] = { ...rawData[index], ...newData };
+                } else {
+                    rawData.unshift(newData);
+                }
                 
                 localStorage.setItem('hibahData2026', JSON.stringify(rawData));
                 populateProdiFilter();
@@ -488,7 +423,7 @@
         }
 
         async function deleteData(id) {
-            if(confirm("Hapus baris data ini dari database?")) {
+            if(confirm("Apakah Anda yakin ingin menghapus data ini?")) {
                 if(!String(id).startsWith('default_') && !String(id).startsWith('local_')) {
                     await db.collection("hibah").doc(String(id)).delete().catch(e => console.log(e));
                 } else {
@@ -501,9 +436,13 @@
         }
 
         function editData(id) {
+            // Pastikan ID dikonversi ke string agar pasti cocok
             const data = rawData.find(r => String(r.id) === String(id));
-            if(!data) return;
-            document.getElementById('modalTitle').textContent = "Edit Detail Proyek";
+            if(!data) {
+                alert("Sistem sedang memuat data, silakan coba beberapa detik lagi.");
+                return;
+            }
+            document.getElementById('modalTitle').textContent = "Edit Data Hibah";
             document.getElementById('formId').value = data.id;
             document.getElementById('formKetua').value = data.Ketua || "";
             document.getElementById('formJudul').value = data.Judul || "";
@@ -516,15 +455,19 @@
             document.getElementById('formMahasiswa').value = data.Mahasiswa || "";
             document.getElementById('formFasilitas').value = data.Fasilitas || "";
             document.getElementById('formKontrakStatus').value = data.StatusKontrak || "Tidak Perlu";
+            
             toggleKontrakUpload();
             openModal();
         }
 
+        // 6. Fungsi Antarmuka (UI) & Filter
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+        
         function openModal() { 
             document.getElementById('dataModal').classList.remove('hidden'); 
             if (document.getElementById('formId').value === "") {
                 document.getElementById('dataForm').reset(); 
-                document.getElementById('modalTitle').textContent = "Entri Data Baru";
+                document.getElementById('modalTitle').textContent = "Tambah Data Hibah";
                 toggleKontrakUpload();
             }
         }
@@ -533,11 +476,15 @@
             document.getElementById('formId').value = ""; 
         }
 
-        function toggleProdiDropdown() { document.getElementById('filterProdiWrapper').classList.toggle('visible'); }
+        function toggleProdiDropdown() {
+            document.getElementById('filterProdiWrapper').classList.toggle('visible');
+        }
 
         document.addEventListener('click', function(event) {
             var isClickInside = document.getElementById('filterProdiWrapper').contains(event.target);
-            if (!isClickInside) document.getElementById('filterProdiWrapper').classList.remove('visible');
+            if (!isClickInside) {
+                document.getElementById('filterProdiWrapper').classList.remove('visible');
+            }
         });
 
         let lastProdisString = "";
@@ -545,18 +492,22 @@
             const ul = document.getElementById('filterProdi');
             const datalist = document.getElementById('prodiOptionsList');
             let uniqueProdi = [...new Set(rawData.map(item => item['Program Studi'] || ""))].filter(p => p !== "");
-            if (!uniqueProdi.includes("Tenaga Kependidikan")) uniqueProdi.push("Tenaga Kependidikan");
+            
+            // Tambahkan Tenaga Kependidikan secara eksplisit jika belum ada
+            if (!uniqueProdi.includes("Tenaga Kependidikan")) {
+                uniqueProdi.push("Tenaga Kependidikan");
+            }
             uniqueProdi.sort();
             
             const currentProdisString = uniqueProdi.join(",");
             if (lastProdisString === currentProdisString && ul.innerHTML !== "") return; 
             lastProdisString = currentProdisString;
             
-            let ulHTML = `<li><label class="cursor-pointer text-blue-700 font-semibold flex items-center"><input type="checkbox" id="checkAllProdi" checked onchange="toggleAllProdi(this)" class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"/> Semua Prodi & Unit</label></li><hr class="my-1 border-gray-200">`;
+            let ulHTML = `<li><label class="cursor-pointer font-semibold block text-slate-800"><input type="checkbox" id="checkAllProdi" checked onchange="toggleAllProdi(this)" class="mr-2"/> Semua Prodi & Tendik</label></li><hr class="my-1 border-slate-200">`;
             let datalistHTML = '';
             
             uniqueProdi.forEach(prodi => {
-                ulHTML += `<li><label class="cursor-pointer text-gray-700 hover:text-gray-900 flex items-center"><input type="checkbox" class="prodi-checkbox mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500" value="${prodi}" checked onchange="applyFilters()"/> ${prodi}</label></li>`;
+                ulHTML += `<li><label class="cursor-pointer block text-slate-600 hover:text-slate-800"><input type="checkbox" class="prodi-checkbox mr-2" value="${prodi}" checked onchange="applyFilters()"/> ${prodi}</label></li>`;
                 datalistHTML += `<option value="${prodi}">${prodi}</option>`;
             });
             
@@ -584,9 +535,9 @@
 
             const anchorText = document.querySelector('.anchor');
             if(anchorText) {
-                if (selectedProdis.length === allCb) anchorText.textContent = "Semua Prodi Terpilih";
-                else if (selectedProdis.length === 0) anchorText.textContent = "Pilih Filter...";
-                else anchorText.textContent = `Multiple Selections (${selectedProdis.length})`;
+                if (selectedProdis.length === allCb) anchorText.textContent = "Semua Prodi";
+                else if (selectedProdis.length === 0) anchorText.textContent = "Pilih Prodi...";
+                else anchorText.textContent = selectedProdis.length + " Prodi Terpilih";
             }
 
             currentData = rawData.filter(row => {
@@ -605,34 +556,32 @@
             const tInt = currentData.filter(r => r['Sumber Hibah'] === 'Internal ITK').reduce((s, r) => s + (r.Dana||0), 0);
             const tBima = currentData.filter(r => r['Sumber Hibah'] === 'Eksternal BIMA').reduce((s, r) => s + (r.Dana||0), 0);
             
-            document.getElementById('cardTotalDana').innerHTML = formatShortNumber(tDana) + `<div class='text-xs text-gray-500 font-normal mt-1'>${formatRupiah(tDana)}</div>`;
-            document.getElementById('cardTotalProyek').textContent = currentData.length;
-            document.getElementById('cardDanaInternal').textContent = formatShortNumber(tInt);
-            document.getElementById('cardDanaBima').textContent = formatShortNumber(tBima);
-            document.getElementById('recordCount').textContent = `Menampilkan ${currentData.length} baris`;
+            if(document.getElementById('cardTotalDana')) document.getElementById('cardTotalDana').textContent = formatRupiah(tDana);
+            if(document.getElementById('cardTotalProyek')) document.getElementById('cardTotalProyek').textContent = currentData.length + " Judul";
+            if(document.getElementById('cardDanaInternal')) document.getElementById('cardDanaInternal').textContent = formatRupiah(tInt);
+            if(document.getElementById('cardDanaBima')) document.getElementById('cardDanaBima').textContent = formatRupiah(tBima);
 
             const tbody = document.getElementById('tableBody');
             if(!tbody) return;
             
             tbody.innerHTML = currentData.map(row => `
-                <tr>
-                    <td class="font-semibold text-blue-900">${row.Ketua}</td>
-                    <td class="text-xs text-gray-700 line-clamp-2" title="${row.Judul}">${row.Judul}</td>
-                    <td>
-                        <span class="font-semibold text-gray-800 block text-xs">${row.Jurusan}</span>
-                        <span class="text-[10px] text-gray-500 uppercase">${row['Program Studi']}</span>
+                <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
+                    <td class="p-3 font-medium text-slate-800">${row.Ketua}</td>
+                    <td class="p-3 text-sm text-slate-600 line-clamp-2" title="${row.Judul}">${row.Judul}</td>
+                    <td class="p-3">
+                        <span class="font-semibold text-slate-700 block">${row.Jurusan}</span>
+                        <span class="text-xs text-slate-500">${row['Program Studi']}</span>
                     </td>
-                    <td>
-                        <div class="flex gap-1 flex-wrap mb-1">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${row.Jenis==='Penelitian' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}">${row.Jenis==='Penelitian' ? 'Penelitian' : 'Pengmas'}</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${(row['Sumber Hibah'] === 'Internal ITK') ? 'bg-emerald-100 text-emerald-800' : (row['Sumber Hibah'] === 'Eksternal BIMA' ? 'bg-purple-100 text-purple-800' : 'bg-gray-200 text-gray-800')}">${row['Sumber Hibah']}</span>
-                        </div>
-                        <div class="text-[10px] text-gray-500 truncate w-full max-w-[120px]" title="${row.Skema||'-'}">${row.Skema||'-'}</div>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded text-xs font-semibold whitespace-nowrap block mb-1 ${row.Jenis==='Penelitian' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}">${row.Jenis==='Penelitian' ? 'Penelitian' : 'Pengmas'}</span>
+                        <span class="px-2 py-1 rounded text-xs font-semibold whitespace-nowrap block mb-1 ${(row['Sumber Hibah'] === 'Internal ITK') ? 'bg-emerald-100 text-emerald-700' : (row['Sumber Hibah'] === 'Eksternal BIMA' ? 'bg-purple-100 text-purple-700' : 'bg-yellow-100 text-yellow-700')}">${row['Sumber Hibah']}</span>
+                        <div class="text-[10px] text-slate-500 mt-1 leading-tight w-full max-w-[120px] whitespace-normal">${row.Skema||'-'}</div>
+                        ${row.StatusKontrak && row.StatusKontrak !== 'Tidak Perlu' ? `<div class="text-[10px] mt-1 font-semibold ${row.StatusKontrak === 'Sudah Diunggah' ? 'text-emerald-600' : 'text-rose-500'}"><i class="fas ${row.StatusKontrak === 'Sudah Diunggah' ? 'fa-check-circle' : 'fa-clock'} mr-1"></i>Kontrak: ${row.StatusKontrak}</div>` : ''}
                     </td>
-                    <td class="text-right font-mono text-sm text-gray-800">${(row.Dana||0).toLocaleString('id-ID')}</td>
-                    <td class="text-center">
-                        <button onclick="editData('${row.id}')" class="pbi-btn-action" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                        <button onclick="deleteData('${row.id}')" class="pbi-btn-action text-red-600" title="Hapus"><i class="fas fa-trash"></i></button>
+                    <td class="p-3 text-right font-medium text-indigo-700">${formatRupiah(row.Dana).replace('Rp','')}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="editData('${row.id}')" class="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded mb-1 w-full text-xs font-semibold shadow-sm transition-colors"><i class="fas fa-edit mr-1"></i>Edit</button>
+                        <button onclick="deleteData('${row.id}')" class="text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1 rounded w-full text-xs font-semibold shadow-sm transition-colors"><i class="fas fa-trash mr-1"></i>Hapus</button>
                     </td>
                 </tr>
             `).join('');
@@ -640,59 +589,42 @@
         }
 
         function updateCharts() {
-            // Data untuk Bar Chart
             const pMap = {}; currentData.forEach(r => pMap[r['Program Studi']] = (pMap[r['Program Studi']]||0) + r.Dana);
-            // Urutkan dari terbesar ke terkecil (PBI Style)
-            const sortedEntries = Object.entries(pMap).sort((a,b) => b[1] - a[1]);
-            const pLabels = sortedEntries.map(e => e[0]); 
-            const pData = sortedEntries.map(e => e[1]);
+            const pLabels = Object.keys(pMap); const pData = pLabels.map(l => pMap[l]);
             
-            // Highlight item pertama (Tertinggi) dengan warna PBI khusus (Biru Tua vs Biru Muda)
-            const backgroundColors = pData.map((_, index) => index === 0 ? '#0f6cbd' : '#71afe5');
+            // Mencari program studi dengan dana tertinggi
+            let maxDana = -1;
+            let maxIndex = -1;
+            for (let i = 0; i < pData.length; i++) {
+                if (pData[i] > maxDana) {
+                    maxDana = pData[i];
+                    maxIndex = i;
+                }
+            }
+
+            // Menentukan warna: warna dasar untuk yang biasa, dan warna menonjol untuk yang tertinggi
+            const backgroundColors = pData.map((_, index) => index === maxIndex ? '#f59e0b' : '#6366f1'); // Kuning/Amber untuk tertinggi, biru untuk sisanya
 
             if(barChartInstance) barChartInstance.destroy();
             const ctxBar = document.getElementById('barChart');
             if(ctxBar) {
                 barChartInstance = new Chart(ctxBar.getContext('2d'), {
-                    type: 'bar', 
-                    data: { labels: pLabels, datasets: [{ data: pData, backgroundColor: backgroundColors, borderRadius: 2 }] },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, 
-                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return formatRupiah(context.raw); } } } }, 
-                        scales: { 
-                            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-                            y: { grid: { color: '#edebe9' }, border: { display: false }, ticks: { font: { size: 10 }, callback: function(value) { return formatShortNumber(value); } } } 
-                        } 
-                    }
+                    type: 'bar', data: { labels: pLabels, datasets: [{ label: 'Total Dana (Rp)', data: pData, backgroundColor: backgroundColors, borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return value / 1000000 + ' Jt'; } } } } }
                 });
             }
 
-            // Data untuk Donut Chart (Warna disesuaikan agar berbeda dari Bar Chart)
             const tInt = currentData.filter(r => r['Sumber Hibah'] === 'Internal ITK').reduce((s, r) => s + (r.Dana||0), 0);
             const tBima = currentData.filter(r => r['Sumber Hibah'] === 'Eksternal BIMA').reduce((s, r) => s + (r.Dana||0), 0);
             const tLainnya = currentData.filter(r => r['Sumber Hibah'] === 'Lainnya').reduce((s, r) => s + (r.Dana||0), 0);
-            const totalAll = tInt + tBima + tLainnya;
-            
-            // Palet Donut: Emerald, Ungu, Pink (Berbeda dengan bar chart yang nuansa biru)
-            const donutColors = ['#10b981', '#8b5cf6', '#ec4899'];
             
             if(pieChartInstance) pieChartInstance.destroy();
             const ctxPie = document.getElementById('pieChart');
             if(ctxPie) {
                 pieChartInstance = new Chart(ctxPie.getContext('2d'), {
-                    type: 'doughnut', 
-                    data: { labels: ['Internal ITK', 'Eksternal BIMA', 'Lainnya'], datasets: [{ data: [tInt, tBima, tLainnya], backgroundColor: donutColors, borderWidth: 1, borderColor: '#ffffff' }] },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, cutout: '70%', 
-                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return formatRupiah(context.raw); } } } } 
-                    }
+                    type: 'doughnut', data: { labels: ['Internal ITK', 'Eksternal BIMA', 'Lainnya'], datasets: [{ data: [tInt, tBima, tLainnya], backgroundColor: ['#10b981', '#8b5cf6', '#ec4899'], borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'bottom' } } }
                 });
-                
-                // PBI Custom Legend
-                document.getElementById('pieLegend').innerHTML = `
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full mr-1" style="background:${donutColors[0]}"></span> Int (${totalAll?Math.round(tInt/totalAll*100):0}%)</div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full mr-1" style="background:${donutColors[1]}"></span> BIMA (${totalAll?Math.round(tBima/totalAll*100):0}%)</div>
-                `;
             }
         }
 
@@ -703,180 +635,356 @@
                 csvContent += `"${(row.Ketua||'').replace(/"/g, '""')}";"${(row.Judul||'').replace(/"/g, '""')}";"${row.Jurusan||''}";"${row['Program Studi']||''}";"${row.Jenis||''}";"${row['Sumber Hibah']||''}";"${row.Skema||''}";${row.Dana||0};${row.Mahasiswa||0};"${(row.Fasilitas||'').replace(/"/g, '""')}"\n`;
             });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "PBI_Export_Hibah_FSTI.csv";
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Ekspor_Hibah_FSTI.csv";
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // ==================== VIS.JS NETWORK GRAPH ====================
+        // ==================== FITUR ROADMAP FAKULTAS DENGAN NETWORK GRAPH ====================
         let network = null;
         
-        function openRoadmap() { document.getElementById('roadmapModal').classList.remove('hidden'); generateRoadmapAnalysis(); }
-        function closeRoadmap() { document.getElementById('roadmapModal').classList.add('hidden'); if(network !== null) { network.destroy(); network = null; } }
+        function openRoadmap() { 
+            document.getElementById('roadmapModal').classList.remove('hidden'); 
+            generateRoadmapAnalysis(); 
+        }
+        function closeRoadmap() { 
+            document.getElementById('roadmapModal').classList.add('hidden'); 
+            if(network !== null) { network.destroy(); network = null; }
+        }
 
         function generateRoadmapAnalysis() {
             const strategicThemes = {
-                "Sistem Cerdas & AI Terapan": { keywords: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "deep learning", "machine learning", "jaringan"], nodeColor: "#0f6cbd", icon: "fa-brain" },
-                "Material Maju & Sains Terapan": { keywords: ["material", "nano", "implan", "baterai", "surya", "komposit", "kimia", "fisika", "tegangan", "plasma"], nodeColor: "#8b5cf6", icon: "fa-atom" },
-                "Pemodelan, Dinamika & Aktuaria": { keywords: ["spasial", "prediksi", "peramalan", "model", "matematika", "statistik", "risiko", "saham", "finansial", "aktuaria"], nodeColor: "#10b981", icon: "fa-chart-network" },
-                "Sosial, Ekonomi Digital & Lingkungan": { keywords: ["umkm", "masyarakat", "desa", "literasi", "wisata", "edukasi", "pemberdayaan", "lingkungan", "ekonomi", "bisnis"], nodeColor: "#f59e0b", icon: "fa-leaf" }
+                "Komputasi & Kecerdasan Buatan": {
+                    keywords: ["cerdas", "deteksi", "klasifikasi", "algoritma", "iot", "digital", "deep learning", "machine learning", "jaringan", "aplikasi", "sistem informasi", "web", "teknologi", "komputasi", "perangkat lunak", "otomatisasi", "sensor", "citra"],
+                    color: "border-blue-500", bg: "bg-blue-50", text: "text-blue-700", icon: "fa-laptop-code", nodeColor: "#3b82f6"
+                },
+                "Material Maju & Sains Terapan": {
+                    keywords: ["material", "nano", "implan", "lapisan", "baterai", "surya", "komposit", "kimia", "fisika", "tegangan", "listrik", "fotokatalis", "sintesis", "ekstrak", "termal"],
+                    color: "border-purple-500", bg: "bg-purple-50", text: "text-purple-700", icon: "fa-atom", nodeColor: "#8b5cf6"
+                },
+                "Pemodelan, Matematika & Data Aktuaria": {
+                    keywords: ["spasial", "prediksi", "peramalan", "model", "persamaan", "matematika", "statistik", "risiko", "saham", "finansial", "aktuaria", "dinamika", "analisis data", "optimasi", "epidemiologi", "diferensial"],
+                    color: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", icon: "fa-chart-line", nodeColor: "#10b981"
+                },
+                "Sosial, Pemberdayaan Masyarakat & Lingkungan": {
+                    keywords: ["pelatihan", "umkm", "masyarakat", "desa", "literasi", "sekolah", "guru", "siswa", "wisata", "edukasi", "pemberdayaan", "lingkungan", "limbah", "ekonomi", "bisnis"],
+                    color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-700", icon: "fa-hands-helping", nodeColor: "#f59e0b"
+                }
             };
 
             let clusters = {};
-            Object.keys(strategicThemes).forEach(theme => clusters[theme] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {} });
-            clusters["Topik Multidisiplin"] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {}, nodeColor: "#64748b", icon: "fa-layer-group" };
+            Object.keys(strategicThemes).forEach(theme => {
+                clusters[theme] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {} };
+            });
+            clusters["Topik Interdisipliner Lainnya"] = { prodi: new Set(), totalDana: 0, count: 0, keywordsHit: {}, color: "border-slate-500", bg: "bg-slate-50", text: "text-slate-700", icon: "fa-layer-group", nodeColor: "#64748b" };
 
-            let nodes = []; let edges = []; let prodiSet = new Set(); let themeProdiLinks = [];
+            // Variabel untuk Network Graph
+            let nodes = [];
+            let edges = [];
+            let prodiSet = new Set();
+            let themeProdiLinks = [];
 
+            // Evaluasi Klaster
             currentData.forEach(row => {
                 let textToAnalyze = ((row.Judul||'') + " " + (row['Program Studi']||'')).toLowerCase();
-                let matchedTheme = "Topik Multidisiplin"; let highestMatches = 0; let topWord = "";
+                let matchedTheme = "Topik Interdisipliner Lainnya";
+                let highestMatches = 0;
+                let topWord = "";
 
                 Object.keys(strategicThemes).forEach(theme => {
-                    let matches = 0; let localTopWord = "";
-                    strategicThemes[theme].keywords.forEach(kw => { if (textToAnalyze.includes(kw)) { matches++; localTopWord = kw; } });
+                    let matches = 0;
+                    let localTopWord = "";
+                    strategicThemes[theme].keywords.forEach(kw => {
+                        if (textToAnalyze.includes(kw)) { matches++; localTopWord = kw; }
+                    });
+
                     if (matches > highestMatches) { highestMatches = matches; matchedTheme = theme; topWord = localTopWord; }
                 });
 
-                const prodiName = row['Program Studi'] || "Unknown";
+                const prodiName = row['Program Studi'] || "Tidak Diketahui";
                 prodiSet.add(prodiName);
+                
                 clusters[matchedTheme].prodi.add(prodiName);
                 clusters[matchedTheme].totalDana += (row.Dana||0);
                 clusters[matchedTheme].count += 1;
+                
+                // Simpan tautan (edge) untuk digambar nanti
                 themeProdiLinks.push({ theme: matchedTheme, prodi: prodiName });
-                if (topWord) clusters[matchedTheme].keywordsHit[topWord] = (clusters[matchedTheme].keywordsHit[topWord] || 0) + 1;
+                
+                if (topWord) {
+                    clusters[matchedTheme].keywordsHit[topWord] = (clusters[matchedTheme].keywordsHit[topWord] || 0) + 1;
+                }
             });
 
-            const roadmapGrid = document.getElementById('gridTema'); roadmapGrid.innerHTML = '';
-            let themeIdCounter = 1; const themeIdMap = {};
+            // --- Render ke HTML (Cards) ---
+            const roadmapGrid = document.getElementById('gridTema');
+            roadmapGrid.innerHTML = '';
+
+            let themeIdCounter = 1;
+            const themeIdMap = {};
 
             Object.keys(clusters).forEach(themeName => {
-                let cluster = clusters[themeName]; if (cluster.count === 0) return; 
+                let cluster = clusters[themeName];
+                if (cluster.count === 0) return; 
 
+                // Siapkan Node untuk Tema (Kotak)
                 themeIdMap[themeName] = themeIdCounter;
-                nodes.push({ id: themeIdCounter, label: themeName + "\\n(" + cluster.count + ")", shape: 'box', color: { background: (strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor), border: 'white' }, font: { color: 'white', size: 12, face: 'Segoe UI' } });
+                nodes.push({
+                    id: themeIdCounter, 
+                    label: themeName + "\\n(" + cluster.count + " Proyek)", 
+                    shape: 'box', 
+                    color: { background: (strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor), border: 'white' },
+                    font: { color: 'white', size: 14, face: 'Inter', bold: true }
+                });
                 themeIdCounter++;
 
-                let style = themeName === "Topik Multidisiplin" ? {color: "border-gray-500", icon: "fa-layer-group"} : {color: `border-[${strategicThemes[themeName].nodeColor}]`, icon: strategicThemes[themeName].icon};
-                let kwArr = Object.entries(cluster.keywordsHit).sort((a,b) => b[1] - a[1]).slice(0, 3).map(k => `<span class="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] text-gray-600 mr-1 mb-1 inline-block">${k[0]}</span>`).join('');
+                let isOther = themeName === "Topik Interdisipliner Lainnya";
+                let style = isOther ? {color: cluster.color, bg: cluster.bg, text: cluster.text, icon: cluster.icon} : strategicThemes[themeName];
                 
-                roadmapGrid.innerHTML += `
-                    <div class="pbi-card flex items-start gap-4">
-                        <div class="text-2xl text-gray-400 shrink-0 mt-1"><i class="fas ${style.icon}"></i></div>
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-sm text-gray-800">${themeName}</h3>
-                            <div class="flex justify-between items-end mt-2 border-t border-gray-100 pt-2">
-                                <div><p class="text-[10px] text-gray-400 mb-1 uppercase">Top Keyword</p><div class="flex flex-wrap">${kwArr||'-'}</div></div>
-                                <div class="text-right"><p class="text-[10px] text-gray-400 uppercase">Valuasi Riset</p><p class="text-sm font-bold text-gray-700">${formatShortNumber(cluster.totalDana)}</p></div>
+                let topKeywordsArr = Object.entries(cluster.keywordsHit).sort((a,b) => b[1] - a[1]).slice(0, 4).map(k => k[0]);
+                let keywordBadges = topKeywordsArr.map(kw => `<span class="bg-white border border-slate-200 px-2 py-1 rounded text-xs text-slate-600 mr-1 mb-1 inline-block capitalize">${kw}</span>`).join('');
+                if(keywordBadges === "") keywordBadges = "<span class='text-xs text-slate-400 italic'>Sinergi Bebas</span>";
+
+                let prodiBadges = Array.from(cluster.prodi).map(p => `<span class="${style.bg} ${style.text} px-2 py-1 rounded-full text-[11px] font-semibold mr-1 mb-1 inline-block border ${style.color} border-opacity-30">${p}</span>`).join('');
+
+                let cardHTML = `
+                    <div class="bg-white border-t-4 ${style.color} rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="${style.bg} ${style.text} w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0">
+                                <i class="fas ${style.icon}"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 leading-tight">${themeName}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${cluster.count} Proyek Penelitian/Pengmas</p>
                             </div>
                         </div>
-                    </div>`;
+                        <div class="mb-4">
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Prodi Terlibat:</p>
+                            <div class="flex flex-wrap">${prodiBadges}</div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Kata Kunci Utama:</p>
+                            <div class="flex flex-wrap">${keywordBadges}</div>
+                        </div>
+                        <div class="mt-auto pt-3 border-t border-slate-100 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Estimasi Penyerapan:</span>
+                            <span class="font-bold text-slate-700">${formatRupiah(cluster.totalDana)}</span>
+                        </div>
+                    </div>
+                `;
+                roadmapGrid.innerHTML += cardHTML;
             });
 
+            // --- Persiapan Node Prodi (Lingkaran) ---
             const prodiIdMap = {};
             Array.from(prodiSet).forEach(prodi => {
-                prodiIdMap[prodi] = themeIdCounter;
-                nodes.push({ id: themeIdCounter, label: prodi, shape: 'dot', size: 10, color: { background: '#ffffff', border: '#8a8886' }, font: { color: '#323130', size: 11, face: 'Segoe UI' } });
-                themeIdCounter++;
+                if(prodi !== "") {
+                    prodiIdMap[prodi] = themeIdCounter;
+                    nodes.push({
+                        id: themeIdCounter, 
+                        label: prodi, 
+                        shape: 'dot', 
+                        size: 15,
+                        color: { background: '#f8fafc', border: '#cbd5e1' },
+                        font: { color: '#475569', size: 12, face: 'Inter' }
+                    });
+                    themeIdCounter++;
+                }
             });
 
+            // --- Persiapan Edges (Koneksi Tema-Prodi) ---
+            // Buat rekap jumlah koneksi agar garis lebih tebal jika lebih banyak proyek
             const connectionCounts = {};
-            themeProdiLinks.forEach(link => { const key = `${themeIdMap[link.theme]}_${prodiIdMap[link.prodi]}`; connectionCounts[key] = (connectionCounts[key] || 0) + 1; });
+            themeProdiLinks.forEach(link => {
+                if(link.prodi !== "") {
+                    const key = `${themeIdMap[link.theme]}_${prodiIdMap[link.prodi]}`;
+                    connectionCounts[key] = (connectionCounts[key] || 0) + 1;
+                }
+            });
+
             Object.keys(connectionCounts).forEach(key => {
                 const [from, to] = key.split('_');
-                edges.push({ from: parseInt(from), to: parseInt(to), width: Math.min(connectionCounts[key] * 0.3 + 1, 4), color: { color: '#c8c6c4', highlight: '#0f6cbd' }, smooth: { type: 'curvedCW' } });
+                edges.push({
+                    from: parseInt(from),
+                    to: parseInt(to),
+                    width: Math.min(connectionCounts[key] * 0.5 + 1, 5), // Ketebalan garis
+                    color: { color: '#cbd5e1', highlight: '#94a3b8' },
+                    smooth: { type: 'continuous' }
+                });
             });
 
+            // --- Menggambar Network Graph Menggunakan Vis.js ---
             const container = document.getElementById('networkGraph');
+            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+            const options = {
+                physics: { stabilization: true, barnesHut: { springLength: 150 } },
+                interaction: { hover: true, tooltipDelay: 200, zoomView: true }
+            };
             if(network !== null) network.destroy();
-            network = new vis.Network(container, { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) }, { physics: { stabilization: true, barnesHut: { springLength: 120 } } });
+            network = new vis.Network(container, data, options);
         }
 
-        // --- Modals for Renstra & Relevansi ---
-        function openRenstra() { document.getElementById('renstraModal').classList.remove('hidden'); generateImpactAnalysis('gridRenstra', true); }
+        function openRenstra() { document.getElementById('renstraModal').classList.remove('hidden'); generateRenstraAnalysis(); }
         function closeRenstra() { document.getElementById('renstraModal').classList.add('hidden'); }
-        function openRelevansi() { document.getElementById('relevansiModal').classList.remove('hidden'); generateImpactAnalysis('gridRelevansi', false); }
-        function closeRelevansi() { document.getElementById('relevansiModal').classList.add('hidden'); }
 
-        function generateImpactAnalysis(targetElement, isRenstra) {
-            const categories = isRenstra ? {
-                "Smart City & Infrastruktur Cerdas": { kw: ["cerdas", "kota", "ikn", "tata ruang", "spasial", "iot", "sensor", "aplikasi", "drone"], color: "#0078d4" },
-                "Energi Hijau & Material Maju": { kw: ["energi", "surya", "plts", "baterai", "solar", "material", "nano"], color: "#10b981" }
-            } : {
-                "Pemberdayaan Ekonomi & UMKM": { kw: ["umkm", "ekonomi", "bisnis", "finansial", "wisata", "pasar"], color: "#d97706" },
-                "Kesehatan & Publik": { kw: ["medis", "penyakit", "covid", "kesehatan", "gizi"], color: "#e11d48" }
+        function generateRenstraAnalysis() {
+            const renstraCategories = {
+                "Smart City & Infrastruktur Cerdas": {
+                    keywords: ["cerdas", "smart", "kota", "ikn", "nusantara", "tata ruang", "spasial", "iot", "sensor", "digitalisasi", "aplikasi", "web", "dashboard", "monitoring", "evakuasi", "gedung", "navigasi", "drone", "uav", "transportasi"],
+                    color: "border-sky-500", bg: "bg-sky-50", text: "text-sky-700", icon: "fa-city",
+                    target: "Pembangunan infrastruktur digital dan tata kota terintegrasi berbasis data untuk IKN."
+                },
+                "Energi Terbarukan & Material Maju": {
+                    keywords: ["energi", "surya", "plts", "baterai", "solar", "hidrogen", "plasma", "material", "listrik", "tegangan", "karbon", "nano"],
+                    color: "border-yellow-500", bg: "bg-yellow-50", text: "text-yellow-700", icon: "fa-solar-panel",
+                    target: "Inovasi penyimpanan energi, konversi energi terbarukan, dan efisiensi kelistrikan."
+                },
+                "Ketahanan Pangan & Kemandirian Medis": {
+                    keywords: ["pangan", "pertanian", "tani", "kebun", "tomat", "melon", "ayam", "ternak", "pupuk", "medis", "kesehatan", "implan", "penyakit", "obat", "toga"],
+                    color: "border-rose-500", bg: "bg-rose-50", text: "text-rose-700", icon: "fa-seedling",
+                    target: "Penerapan Smart Farming dan pengembangan material pendukung kesehatan/medis."
+                },
+                "Pemberdayaan & Transformasi Ekonomi": {
+                    keywords: ["umkm", "masyarakat", "wisata", "desa", "literasi", "sekolah", "pelatihan", "koperasi", "bisnis", "ekonomi", "finansial", "saham"],
+                    color: "border-violet-500", bg: "bg-violet-50", text: "text-violet-700", icon: "fa-users-cog",
+                    target: "Peningkatan taraf ekonomi kreatif, pariwisata, dan daya saing UMKM melalui teknologi."
+                }
             };
 
-            let clusters = {}; Object.keys(categories).forEach(c => clusters[c] = { count: 0, val: 0 });
+            let clusters = {};
+            Object.keys(renstraCategories).forEach(cat => { clusters[cat] = { count: 0, totalDana: 0, sampleProjects: [] }; });
+
             currentData.forEach(row => {
-                let txt = ((row.Judul||"") + " " + (row.Skema||"")).toLowerCase();
-                Object.keys(categories).forEach(c => { if(categories[c].kw.some(k => txt.includes(k))) { clusters[c].count++; clusters[c].val+=row.Dana; } });
+                let textToAnalyze = ((row.Judul||"") + " " + (row.Skema||"")).toLowerCase();
+                let matchedTheme = null; let highestMatches = 0;
+
+                Object.keys(renstraCategories).forEach(cat => {
+                    let matches = 0;
+                    renstraCategories[cat].keywords.forEach(kw => { if (textToAnalyze.includes(kw)) matches++; });
+                    if (matches > highestMatches) { highestMatches = matches; matchedTheme = cat; }
+                });
+
+                if(matchedTheme) {
+                    clusters[matchedTheme].count += 1;
+                    clusters[matchedTheme].totalDana += (row.Dana||0);
+                    if(clusters[matchedTheme].sampleProjects.length < 2) clusters[matchedTheme].sampleProjects.push(row.Judul);
+                }
             });
 
-            const grid = document.getElementById(targetElement); grid.innerHTML = '';
-            Object.keys(clusters).forEach(c => {
-                if(clusters[c].count > 0) {
-                    grid.innerHTML += `<div class="pbi-card border-l-4" style="border-left-color:${categories[c].color}">
-                        <h3 class="font-bold text-gray-800">${c}</h3><div class="mt-4 flex justify-between"><div class="text-center"><p class="text-xs text-gray-500 uppercase">Volume</p><p class="font-bold text-xl">${clusters[c].count}</p></div><div class="text-center border-l pl-4"><p class="text-xs text-gray-500 uppercase">Investasi</p><p class="font-bold text-xl">${formatShortNumber(clusters[c].val)}</p></div></div></div>`;
+            const grid = document.getElementById('gridRenstra'); grid.innerHTML = '';
+
+            Object.keys(clusters).forEach(cat => {
+                let cluster = clusters[cat];
+                if (cluster.count === 0) return;
+                let style = renstraCategories[cat];
+                let samplesHTML = cluster.sampleProjects.map(judul => `<li class="text-xs text-slate-600 truncate" title="${judul}"><i class="fas fa-check text-[10px] ${style.text} mr-1.5"></i>${judul}</li>`).join('');
+
+                let cardHTML = `
+                    <div class="bg-white border-t-4 ${style.color} rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all flex flex-col">
+                        <div class="flex items-start gap-4 mb-3">
+                            <div class="${style.bg} ${style.text} w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0"><i class="fas ${style.icon}"></i></div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 leading-tight">${cat}</h3>
+                                <p class="text-[11px] font-bold ${style.text} mt-1.5 uppercase tracking-wide bg-white border ${style.color} px-2 py-0.5 rounded shadow-sm inline-block">${cluster.count} Proyek Sesuai Target</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4 line-clamp-2"><span class="font-semibold">Sasaran Renstra:</span> ${style.target}</p>
+                        <div class="bg-slate-50 rounded-lg p-3 mb-4 flex-1 border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Penelitian Percontohan:</p>
+                            <ul class="space-y-1.5">${samplesHTML}</ul>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Total Investasi Riset:</span>
+                            <span class="font-bold text-slate-800 text-lg">${formatRupiah(cluster.totalDana)}</span>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
+            });
+        }
+
+        function openRelevansi() { document.getElementById('relevansiModal').classList.remove('hidden'); generateRelevansiAnalysis(); }
+        function closeRelevansi() { document.getElementById('relevansiModal').classList.add('hidden'); }
+
+        function generateRelevansiAnalysis() {
+            const impactCategories = {
+                "Pemberdayaan Ekonomi & UMKM": {
+                    keywords: ["umkm", "ekonomi", "bisnis", "finansial", "saham", "wisata", "pasar", "industri", "keuangan", "investasi", "koperasi", "kewirausahaan", "kreatif", "kripto", "gacha", "p pemasaran", "branding", "katalog"],
+                    color: "border-amber-500", bg: "bg-amber-50", text: "text-amber-700", icon: "fa-store",
+                    desc: "Mendorong pertumbuhan ekonomi lokal, daya saing UMKM, dan literasi finansial masyarakat melalui intervensi digital dan manajemen bisnis terapan."
+                },
+                "Kesehatan & Kesejahteraan Publik": {
+                    keywords: ["kesehatan", "medis", "penyakit", "covid", "antraks", "paru", "stunting", "obat", "gizi", "klinik", "rumah sakit", "down syndrome", "mortalitas", "epidemiologi", "implan", "biokompatibilitas", "sanitasi", "toga"],
+                    color: "border-rose-500", bg: "bg-rose-50", text: "text-rose-700", icon: "fa-heartbeat",
+                    desc: "Inovasi biomaterial, pemodelan penyebaran penyakit (epidemiologi), alat bantu medis, dan peningkatan taraf kesehatan serta sanitasi masyarakat."
+                },
+                "Pendidikan & Peningkatan Literasi": {
+                    keywords: ["pendidikan", "sekolah", "siswa", "guru", "literasi", "belajar", "efl", "edukasi", "bahasa", "buku", "panti", "smp", "sma", "sdn", "robotika", "mahasiswa", "kampus"],
+                    color: "border-blue-500", bg: "bg-blue-50", text: "text-blue-700", icon: "fa-graduation-cap",
+                    desc: "Optimalisasi kualitas pembelajaran, edukasi sains dasar (STEM/Robotika), serta fasilitas literasi digital bagi pelajar dan masyarakat umum."
+                },
+                "Lingkungan, Energi & Ketahanan Pangan": {
+                    keywords: ["lingkungan", "sampah", "energi", "surya", "plts", "sawit", "air", "pertanian", "tani", "kebun", "iklim", "cuaca", "limbah", "ekosistem", "naga", "ayam", "lele", "melon", "tomat", "pangan", "hutan", "komposter", "bekantan", "hijau"],
+                    color: "border-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700", icon: "fa-leaf",
+                    desc: "Solusi energi terbarukan (Smart Energy), teknologi tepat guna untuk agrikultur (Smart Farming), konservasi alam, dan sistem daur ulang pengelolaan limbah (Green Technology)."
+                },
+                "Infrastruktur Cerdas & Tata Ruang IKN": {
+                    keywords: ["ikn", "teknologi", "iot", "cerdas", "aplikasi", "sistem", "informasi", "algoritma", "ai", "keamanan", "infrastruktur", "tata ruang", "spasial", "gempa", "tanah", "kapal", "drone", "pemetaan", "satelit", "maritim"],
+                    color: "border-indigo-500", bg: "bg-indigo-50", text: "text-indigo-700", icon: "fa-city",
+                    desc: "Mendukung percepatan digitalisasi tata kota, mitigasi bencana spasial, serta pengembangan perangkat lunak/keras cerdas (Smart City) untuk menunjang kebutuhan IKN."
                 }
+            };
+
+            let clusters = {};
+            Object.keys(impactCategories).forEach(cat => { clusters[cat] = { count: 0, totalDana: 0, sampleProjects: [] }; });
+
+            currentData.forEach(row => {
+                let textToAnalyze = ((row.Judul||"") + " " + (row.Skema||"")).toLowerCase();
+                let matchedTheme = null; let highestMatches = 0;
+
+                Object.keys(impactCategories).forEach(cat => {
+                    let matches = 0;
+                    impactCategories[cat].keywords.forEach(kw => { if (textToAnalyze.includes(kw)) matches++; });
+                    if (matches > highestMatches) { highestMatches = matches; matchedTheme = cat; }
+                });
+
+                if(matchedTheme) {
+                    clusters[matchedTheme].count += 1;
+                    clusters[matchedTheme].totalDana += (row.Dana||0);
+                    if(clusters[matchedTheme].sampleProjects.length < 2) clusters[matchedTheme].sampleProjects.push(row.Judul);
+                }
+            });
+
+            const grid = document.getElementById('gridRelevansi'); grid.innerHTML = '';
+
+            Object.keys(clusters).forEach(cat => {
+                let cluster = clusters[cat];
+                if (cluster.count === 0) return;
+                let style = impactCategories[cat];
+                let samplesHTML = cluster.sampleProjects.map(judul => `<li class="text-xs text-slate-600 truncate" title="${judul}"><i class="fas fa-check-circle text-[10px] text-teal-500 mr-1.5"></i>${judul}</li>`).join('');
+
+                let cardHTML = `
+                    <div class="bg-white border-t-4 ${style.color} rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all flex flex-col">
+                        <div class="flex items-start gap-4 mb-3">
+                            <div class="${style.bg} ${style.text} w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0"><i class="fas ${style.icon}"></i></div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 leading-tight">${cat}</h3>
+                                <p class="text-[11px] font-bold ${style.text} mt-1.5 uppercase tracking-wide bg-white border ${style.color} px-2 py-0.5 rounded shadow-sm inline-block">${cluster.count} Proyek Relevan</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4 line-clamp-2">${style.desc}</p>
+                        <div class="bg-slate-50 rounded-lg p-3 mb-4 flex-1 border border-slate-100">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Contoh Implementasi:</p>
+                            <ul class="space-y-1.5">${samplesHTML}</ul>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-500 uppercase">Nilai Kontribusi:</span>
+                            <span class="font-bold text-slate-800 text-lg">${formatRupiah(cluster.totalDana)}</span>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHTML;
             });
         }
     </script>
 </body>
 </html>
-"""
-
-final_html = html_template.replace("__JSON_DATA__", json_str)
-
-with open("Dashboard_Hibah_Roadmap_2026.txt", "w", encoding="utf-8") as f:
-    f.write(final_html)
-
-print("Updated dashboard with Roadmap Feature created successfully.")}
-Roadmap Feature created successfully.")}Tentu, saya akan membuat panduan berdasarkan persis gambar yang Anda lampirkan tanpa mengarang fitur di luar gambar tersebut. 
-
-Berikut adalah teks naratif untuk poster panduan (seperti dokumen PDF/Slide) dengan merujuk ke gambar `Halaman_Pen_PkM_3.jpg`:
-
-```markdown
-# 📊 PANDUAN DASBOR MANAJEMEN HIBAH FSTI 2026
-
-![Tampilan Utama Dasbor FSTI](Halaman_Pen_PkM_3.jpg)
-
-Dasbor Manajemen Data Penelitian & Pengabdian FSTI ITK dirancang untuk memudahkan pemantauan dan administrasi proyek hibah. Berikut adalah cara menggunakan fitur-fitur dasbor seperti yang terlihat pada gambar di atas:
-
----
-
-### 1. Panel Statistik Utama (Bagian Atas)
-Empat kotak di bagian atas memberikan informasi ringkas kondisi keuangan riset saat ini. Anda dapat memantau dengan cepat:
-*   **TOTAL PENDANAAN:** Akumulasi seluruh dana yang dikelola (Rp 2.588.419.507).
-*   **TOTAL PROYEK:** Total keseluruhan proyek aktif (129 Judul).
-*   **DANA INTERNAL ITK:** Porsi dana yang diserap dari internal kampus.
-*   **DANA EKSTERNAL BIMA:** Porsi dana yang bersumber dari pendanaan BIMA eksternal.
-
-### 2. Fitur *Dropdown* Filter (Kanan Atas)
-Gunakan kotak pilihan (filter) ini untuk menyaring tampilan grafik dan tabel secara dinamis:
-*   **Semua Sumber:** Saring berdasarkan asal pendanaan (Internal, Eksternal).
-*   **Semua Jurusan & Tendik:** Fokuskan data untuk spesifik Jurusan JSAD, JTIEB, atau Tenaga Kependidikan.
-*   **Semua Prodi:** Filter untuk prodi tertentu (Fisika, Informatika, dll.).
-*   **Semua Jenis:** Tampilkan khusus "Penelitian" atau "Pengmas".
-*   *Terdapat pula kotak **pencarian teks** "Cari judul / ketua..." untuk melacak data spesifik secara instan.*
-
-### 3. Visualisasi Grafik (Tengah Layar)
-Dua visual ini membantu Anda memahami komposisi dana:
-*   **Alokasi Dana per Program Studi (Grafik Batang):** Menunjukkan penyerapan dana dari tiap prodi (Sistem Informasi, Manajemen Teknologi, Fisika, dsb). **Prodi dengan serapan tertinggi (Fisika pada contoh gambar) secara otomatis disorot dengan warna Oranye (Kuning),** sedangkan prodi lainnya berwarna biru terang.
-*   **Sumber Hibah (Grafik Donat):** Memisahkan proporsi pendanaan menjadi tiga bagian warna: Internal ITK (Hijau), Eksternal BIMA (Ungu), dan Lainnya (Merah Muda). *Perhatikan bahwa warna donat ini sengaja dibuat berbeda dari warna grafik batang agar Anda mudah membedakan datanya.*
-
-### 4. Baris Tombol Modul (Di atas Tabel)
-Terdapat enam tombol interaktif untuk analisis lanjutan dan tindakan:
-*   📕 **Dokumen Roadmap PDF:** Menampilkan langsung file PDF dokumen resmi *Roadmap* Fakultas.
-*   🟦 **Jaringan Kolaborasi:** Menampilkan model klaster *network graph* antar prodi.
-*   🟪 **Kesesuaian Roadmap FSTI:** Menganalisis sebaran riset dengan Renstra FSTI.
-*   🟩 **Relevansi Masyarakat:** Melihat sebaran riset untuk pemberdayaan masyarakat.
-*   🟩 **Ekspor CSV:** Mengunduh tabel yang muncul saat ini menjadi file *spreadsheet* (.csv).
-*   🟪 **Tambah Data:** Menambahkan baris proyek baru ke dalam sistem.
-
-### 5. Tabel 'Daftar Detail Proyek' (Bagian Bawah)
-Tabel ini menjabarkan seluruh rekam jejak setiap hibah. Setiap baris merinci:
-*   **Ketua** dan **Judul** riset.
-*   **Prodi/Tendik** asal pengusul.
-*   **Sumber & Skema** (Dengan pelabelan otomatis; Penelitian vs Pengmas).
-*   **Dana (Rp)** Nominal anggaran proyek.
-*   **Aksi:** Tombol **[Edit]** (untuk memperbaiki judul/dana/menambahkan bukti kontrak) dan **[Hapus]** (untuk menghapus entri dari database).
