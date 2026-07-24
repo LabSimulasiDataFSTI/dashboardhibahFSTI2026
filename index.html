@@ -17,15 +17,22 @@
     <style>
         body { background-color: #f3f2f1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #252423; overflow-x: hidden; }
         
-        /* Layout Grid ala Power BI */
-        .dashboard-container { padding: 12px 24px; display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; max-width: 1800px; margin: 0 auto;}
+        /* Layout Grid ala Power BI - Responsive Mode */
+        .dashboard-container { padding: 12px; display: flex; flex-direction: column; gap: 16px; max-width: 1800px; margin: 0 auto; }
+        @media (min-width: 1024px) { 
+            .dashboard-container { padding: 12px 24px; display: grid; grid-template-columns: 240px 1fr; align-items: start;} 
+        }
         
         /* Card Styling Power BI */
         .pbi-card { background: #ffffff; box-shadow: 0 1.2px 3.6px rgba(0,0,0,0.1), 0 0.3px 0.9px rgba(0,0,0,0.1); border-radius: 4px; padding: 16px; }
         .pbi-header { font-size: 14px; font-weight: 600; color: #323130; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
         
-        /* Sidebar Filter */
-        .filter-pane { background: transparent; height: calc(100vh - 80px); position: sticky; top: 70px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;}
+        /* Sidebar Filter - Responsive Mode */
+        .filter-pane { background: transparent; display: flex; flex-direction: column; gap: 12px; }
+        @media (min-width: 1024px) {
+            .filter-pane { height: calc(100vh - 80px); position: sticky; top: 70px; overflow-y: auto; }
+        }
+
         .filter-box { background: #ffffff; border: 1px solid #e1dfdd; border-radius: 4px; padding: 12px; }
         .filter-label { font-size: 11px; font-weight: 600; color: #605e5c; text-transform: uppercase; margin-bottom: 6px; display: block;}
         
@@ -33,15 +40,18 @@
         .pbi-select, .pbi-input { width: 100%; border: 1px solid #8a8886; border-radius: 2px; padding: 6px 8px; font-size: 13px; color: #323130; outline: none; transition: border-color 0.2s; background: #fff;}
         .pbi-select:focus, .pbi-input:focus { border-color: #0078d4; border-bottom-width: 2px; padding-bottom: 5px; }
         
-        /* Top Summary Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+        /* Top Summary Cards - Responsive Mode */
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        @media (min-width: 768px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+        
         .kpi-card { text-align: center; padding: 16px 12px; display: flex; flex-direction: column; justify-content: center;}
-        .kpi-value { font-size: 32px; font-weight: 400; color: #323130; line-height: 1.1; font-family: 'Segoe UI', sans-serif;}
-        .kpi-label { font-size: 12px; color: #0078d4; font-weight: 600; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .kpi-value { font-size: 24px; font-weight: 400; color: #323130; line-height: 1.1; font-family: 'Segoe UI', sans-serif;}
+        @media (min-width: 768px) { .kpi-value { font-size: 32px; } }
+        .kpi-label { font-size: 11px; color: #0078d4; font-weight: 600; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;}
         
         /* Data Table */
-        .table-container { max-height: 380px; overflow-y: auto; border: 1px solid #e1dfdd; border-radius: 2px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-container { max-height: 380px; overflow-y: auto; overflow-x: auto; border: 1px solid #e1dfdd; border-radius: 2px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
         th { background-color: #f3f2f1; color: #323130; font-weight: 600; text-align: left; padding: 8px 12px; position: sticky; top: 0; z-index: 10; border-bottom: 1px solid #e1dfdd; }
         td { padding: 8px 12px; border-bottom: 1px solid #edebe9; color: #323130; vertical-align: top;}
         tr:hover { background-color: #f3f2f1; }
@@ -54,9 +64,10 @@
         .pbi-action-icon { color: #0f6cbd; padding: 4px; cursor: pointer; font-size: 13px; opacity: 0.8;}
         .pbi-action-icon:hover { opacity: 1; background: #e1dfdd; border-radius: 2px;}
         
-        /* Top Navigation Bar */
-        .top-nav { background-color: #115ea3; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .top-nav h1 { font-size: 16px; font-weight: 600; letter-spacing: 0.5px;}
+        /* Top Navigation Bar - Responsive Mode */
+        .top-nav { background-color: #115ea3; color: white; padding: 8px 16px; min-height: 56px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .top-nav h1 { font-size: 14px; font-weight: 600; letter-spacing: 0.5px;}
+        @media (min-width: 768px) { .top-nav { padding: 0 24px; height: 56px; flex-wrap: nowrap;} .top-nav h1 { font-size: 16px; } }
         
         /* Custom Multi-select Dropdown */
         .dropdown-check-list { display: inline-block; position: relative; width: 100%; }
@@ -68,33 +79,34 @@
         .dropdown-check-list.visible .items { display: block; }
         
         /* Modals */
-        .modal-overlay { background-color: rgba(0, 0, 0, 0.6); z-index: 100; backdrop-filter: blur(2px);}
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.6); z-index: 100; backdrop-filter: blur(2px); padding: 12px;}
         
         /* Scrollbars */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #c8c6c4; border-radius: 4px; border: 2px solid #fff;}
+        ::-webkit-scrollbar-thumb { background: #c8c6c4; border-radius: 4px; border: 1px solid #fff;}
         ::-webkit-scrollbar-thumb:hover { background: #a19f9d; }
 
-        /* Container untuk Grafik Jaringan yang Dibesarkan (500px) */
-        #networkGraph { width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 0.25rem; background-color: #ffffff; }
+        /* Container untuk Grafik Jaringan yang Dibesarkan */
+        #networkGraph { width: 100%; height: 350px; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #ffffff; }
+        @media (min-width: 768px) { #networkGraph { height: 500px; } }
     </style>
 </head>
 <body>
 
     <!-- Top Navigation -->
     <div class="top-nav">
-        <div class="flex items-center gap-4">
-            <img src="logo_itk.png" alt="Logo ITK" class="h-10 bg-white rounded p-1 shadow-sm" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png';">
-            <h1 class="border-l-2 border-white border-opacity-30 pl-4 ml-1 py-1">Manajemen Eksekutif Hibah Penelitian & PkM FSTI 2026</h1>
+        <div class="flex items-center gap-2 md:gap-4">
+            <img src="logo_itk.png" alt="Logo ITK" class="h-8 md:h-10 bg-white rounded p-1 shadow-sm" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png';">
+            <h1 class="border-l border-white border-opacity-30 pl-3 md:pl-4 py-1 leading-tight">Manajemen Eksekutif Hibah Penelitian & PkM FSTI 2026</h1>
         </div>
-        <div class="flex items-center gap-4 text-xs font-semibold">
+        <div class="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs font-semibold w-full md:w-auto justify-end">
             <!-- TOMBOL FITUR BARU: ARSIP 2025 -->
-            <button onclick="openArsip2025()" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 rounded text-white transition-colors cursor-pointer shadow-sm border border-emerald-400" title="Buka Halaman Arsip 2025">
-                <i class="fas fa-history text-sm"></i> Arsip 2025
+            <button onclick="openArsip2025()" class="flex items-center gap-1.5 md:gap-2 bg-emerald-500 hover:bg-emerald-600 px-2.5 md:px-3 py-1.5 md:py-2 rounded text-white transition-colors cursor-pointer shadow-sm border border-emerald-400" title="Buka Halaman Arsip 2025">
+                <i class="fas fa-history"></i> <span class="hidden sm:inline">Arsip</span> 2025
             </button>
-            <span class="flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1.5 rounded"><i class="fas fa-database text-green-300"></i> Cloud Synced</span>
-            <div class="w-8 h-8 rounded-full bg-white text-blue-800 flex items-center justify-center font-bold shadow">F</div>
+            <span class="hidden md:flex items-center gap-2 bg-white bg-opacity-20 px-3 py-1.5 rounded"><i class="fas fa-database text-green-300"></i> Cloud Synced</span>
+            <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white text-blue-800 flex items-center justify-center font-bold shadow shrink-0">F</div>
         </div>
     </div>
 
@@ -216,7 +228,7 @@
                         <span>Distribusi Total Dana per Program Studi / Unit</span>
                         <i class="fas fa-ellipsis-h text-gray-400"></i>
                     </div>
-                    <div class="flex-1 w-full relative">
+                    <div class="flex-1 w-full relative overflow-hidden">
                         <canvas id="barChart"></canvas>
                     </div>
                 </div>
@@ -232,12 +244,12 @@
                     <table id="dataTable">
                         <thead>
                             <tr>
-                                <th style="width: 15%">Ketua Peneliti</th>
-                                <th style="width: 45%">Judul Riset / PkM</th>
-                                <th style="width: 15%">Afiliasi Unit</th>
-                                <th style="width: 10%">Kategori</th>
-                                <th style="width: 10%; text-align: right;">Total Dana</th>
-                                <th style="width: 5%; text-align: center;">Aksi</th>
+                                <th style="min-width: 140px;">Ketua Peneliti</th>
+                                <th style="min-width: 250px;">Judul Riset / PkM</th>
+                                <th style="min-width: 120px;">Afiliasi Unit</th>
+                                <th style="min-width: 120px;">Kategori</th>
+                                <th style="min-width: 100px; text-align: right;">Total Dana</th>
+                                <th style="min-width: 80px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
@@ -254,21 +266,21 @@
     <div id="arsip2025Modal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[60]">
         <div class="bg-gray-50 rounded shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col relative border-t-8 border-t-emerald-600 overflow-hidden">
             <!-- Header Modal 2025 -->
-            <div class="bg-white px-6 py-4 flex justify-between items-center border-b shadow-sm shrink-0">
-                <div class="flex items-center gap-4">
-                    <img src="logo_itk.png" alt="Logo ITK" class="h-8" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png';">
+            <div class="bg-white px-4 md:px-6 py-3 md:py-4 flex justify-between items-center border-b shadow-sm shrink-0">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <img src="logo_itk.png" alt="Logo ITK" class="h-6 md:h-8" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/id/6/69/Logo_ITK.png';">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-history text-emerald-600 mr-2"></i> Ruang Kerja Arsip Tahun 2025</h2>
-                        <p class="text-xs text-gray-500 mt-1">Data pada halaman ini disimpan terpisah di database hibah_2025 dan tidak mempengaruhi analitik 2026.</p>
+                        <h2 class="text-lg md:text-xl font-bold text-gray-800"><i class="fas fa-history text-emerald-600 mr-2"></i> Arsip Tahun 2025</h2>
+                        <p class="hidden md:block text-xs text-gray-500 mt-1">Data pada halaman ini disimpan terpisah di database hibah_2025.</p>
                     </div>
                 </div>
-                <button onclick="closeArsip2025()" class="text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 px-3 py-1.5 rounded transition-colors">
-                    <i class="fas fa-times mr-1"></i> Tutup Arsip
+                <button onclick="closeArsip2025()" class="text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 px-2 md:px-3 py-1.5 rounded transition-colors shrink-0">
+                    <i class="fas fa-times md:mr-1"></i> <span class="hidden md:inline">Tutup Arsip</span>
                 </button>
             </div>
 
             <!-- Konten Modal 2025 (Scrollable) -->
-            <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 <!-- Form Input 2025 -->
                 <div class="pbi-card lg:col-span-1 shadow-md">
@@ -321,7 +333,7 @@
                 </div>
 
                 <!-- Tabel Data 2025 -->
-                <div class="pbi-card lg:col-span-2 shadow-md flex flex-col h-full min-h-[500px]">
+                <div class="pbi-card lg:col-span-2 shadow-md flex flex-col h-full min-h-[400px]">
                     <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 gap-2">
                         <h3 class="text-sm font-bold text-gray-700 uppercase">Tabel Arsip Data 2025</h3>
                         
@@ -337,11 +349,11 @@
                         <table class="w-full">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%">Ketua</th>
-                                    <th style="width: 45%">Judul</th>
-                                    <th style="width: 15%">Kategori</th>
-                                    <th style="width: 15%; text-align: right;">Dana (Rp)</th>
-                                    <th style="width: 5%; text-align: center;">Aksi</th>
+                                    <th style="min-width: 120px;">Ketua</th>
+                                    <th style="min-width: 200px;">Judul</th>
+                                    <th style="min-width: 100px;">Kategori</th>
+                                    <th style="min-width: 100px; text-align: right;">Dana (Rp)</th>
+                                    <th style="min-width: 60px; text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody2025"></tbody>
@@ -466,26 +478,25 @@
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col p-4 md:p-6 relative overflow-hidden border-t-4 border-t-blue-600">
             <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10"><i class="fas fa-times text-xl"></i></button>
-            <div class="pbi-header text-xl mb-1"><i class="fas fa-project-diagram text-blue-600 mr-2"></i> Jaringan Kolaborasi Program Studi</div>
+            <div class="pbi-header text-xl mb-1"><i class="fas fa-project-diagram text-blue-600 mr-2"></i> Visualisasi Network</div>
             <p class="text-xs text-gray-500 border-b pb-3 mb-4 shrink-0">Pemetaan relasi keilmuan menggunakan algoritma Text Similarity & Network Graph.</p>
             
             <div class="overflow-y-auto flex-1 pr-2 w-full">
                 <!-- NETWORK GRAPH DIPERBESAR TINGGINYA (500px) -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-bold text-slate-700 mb-2"><i class="fas fa-network-wired text-blue-500 mr-2"></i>Visualisasi Network</h3>
-                    <div id="networkGraph" class="shadow-inner bg-white rounded-lg border border-gray-200"></div>
+                <div class="mb-8">
+                    <div id="networkGraph" class="shadow-inner bg-white rounded border border-gray-200"></div>
                 </div>
 
-                <!-- BENTUK KARTU LAMA (LENGKAP DENGAN KATA KUNCI & PRODI) -->
+                <!-- BENTUK KARTU LAMA (LENGKAP DENGAN KATA KUNCI & PRODI) DIKEMBALIKAN -->
                 <div>
-                    <h3 class="text-lg font-bold text-slate-700 mb-4"><i class="fas fa-layer-group text-emerald-500 mr-2"></i>Detail Sinergi Tema Strategis</h3>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 border-b border-gray-200 pb-2"><i class="fas fa-layer-group text-emerald-500 mr-2"></i>Detail Sinergi Tema Strategis</h3>
                     <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL KESESUAIAN ROADMAP (TAMPILAN RINCIAN LENGKAP SEBELUMNYA) -->
+    <!-- MODAL KESESUAIAN ROADMAP (TAMPILAN RINCIAN LENGKAP) -->
     <div id="renstraModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col p-4 md:p-6 relative border-t-4 border-t-fuchsia-600">
             <button onclick="closeRenstra()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
@@ -498,7 +509,7 @@
         </div>
     </div>
 
-    <!-- MODAL RELEVANSI (TAMPILAN RINCIAN LENGKAP SEBELUMNYA) -->
+    <!-- MODAL RELEVANSI (TAMPILAN RINCIAN LENGKAP) -->
     <div id="relevansiModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col p-4 md:p-6 relative border-t-4 border-t-teal-600">
             <button onclick="closeRelevansi()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
@@ -922,9 +933,10 @@
             const container = document.getElementById('networkGraph');
             if(network !== null) network.destroy();
             
+            // Jeda singkat agar modal render duluan sebelum menggambar vis.js
             setTimeout(() => {
                 network = new vis.Network(container, { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) }, { physics: { stabilization: true, barnesHut: { springLength: 120 } } });
-            }, 150);
+            }, 100);
         }
 
         // --- Modals for Renstra & Relevansi ---
@@ -993,7 +1005,7 @@
                             <div class="${style.bg} ${style.text} w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0"><i class="fas ${style.icon}"></i></div>
                             <div>
                                 <h3 class="font-bold text-sm text-slate-800 leading-tight">${cat}</h3>
-                                <p class="text-[10px] font-bold ${style.text} mt-1 uppercase tracking-wide bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded shadow-sm inline-block">${cluster.count} Proyek Sesuai Target</p>
+                                <p class="text-[10px] font-bold ${style.text} mt-1 uppercase tracking-wide bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded inline-block">${cluster.count} Proyek Sesuai Target</p>
                             </div>
                         </div>
                         <p class="text-xs text-slate-600 mb-3 line-clamp-2"><span class="font-semibold">Fokus:</span> ${style.target}</p>
@@ -1079,7 +1091,7 @@
                         <div class="flex items-start gap-3 mb-3">
                             <div class="${style.bg} ${style.text} w-12 h-12 rounded-lg flex items-center justify-center text-xl shrink-0"><i class="fas ${style.icon}"></i></div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-800 leading-tight">${cat}</h3>
+                                <h3 class="font-bold text-slate-800 leading-tight">${cat}</h3>
                                 <p class="text-[11px] font-bold ${style.text} mt-1 uppercase tracking-wide bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded shadow-sm inline-block">${cluster.count} Proyek Relevan</p>
                             </div>
                         </div>
