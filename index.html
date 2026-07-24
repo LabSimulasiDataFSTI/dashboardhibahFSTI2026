@@ -87,7 +87,7 @@
         ::-webkit-scrollbar-thumb { background: #c8c6c4; border-radius: 4px; border: 1px solid #fff;}
         ::-webkit-scrollbar-thumb:hover { background: #a19f9d; }
 
-        /* Container untuk Grafik Jaringan yang Dibesarkan (500px) */
+        /* Container untuk Grafik Jaringan yang Dibesarkan */
         #networkGraph { width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 0.25rem; background-color: #ffffff; }
     </style>
 </head>
@@ -336,10 +336,14 @@
                     <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 gap-2">
                         <h3 class="text-sm font-bold text-gray-700 uppercase">Tabel Arsip Data 2025</h3>
                         
-                        <!-- TOMBOL EXPORT CSV KHUSUS 2025 -->
-                        <div class="flex items-center gap-3">
+                        <!-- TOMBOL EXPORT/IMPORT CSV KHUSUS 2025 -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <input type="file" id="importCsv2025" accept=".csv" style="display:none" onchange="processCSVUpload2025(event)">
+                            <button id="btnImport2025" onclick="document.getElementById('importCsv2025').click()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded font-semibold transition-colors shadow-sm">
+                                <i class="fas fa-file-import mr-1"></i> Impor CSV
+                            </button>
                             <button onclick="exportToExcel2025()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded font-semibold transition-colors shadow-sm">
-                                <i class="fas fa-file-excel mr-1"></i> Ekspor CSV 2025
+                                <i class="fas fa-file-excel mr-1"></i> Ekspor CSV
                             </button>
                             <span class="text-xs font-mono bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-bold" id="count2025">0 data</span>
                         </div>
@@ -473,20 +477,21 @@
         </div>
     </div>
 
-    <!-- MODAL ROADMAP JARINGAN -->
+    <!-- MODAL ROADMAP JARINGAN DENGAN DETAIL KARTU -->
     <div id="roadmapModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col p-4 md:p-6 relative overflow-hidden border-t-4 border-t-blue-600">
             <button onclick="closeRoadmap()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10"><i class="fas fa-times text-xl"></i></button>
-            <div class="pbi-header text-xl mb-1"><i class="fas fa-project-diagram text-blue-600 mr-2"></i> Visualisasi Network</div>
+            <div class="pbi-header text-xl mb-1"><i class="fas fa-project-diagram text-blue-600 mr-2"></i> Jaringan Kolaborasi Program Studi</div>
             <p class="text-xs text-gray-500 border-b pb-3 mb-4 shrink-0">Pemetaan relasi keilmuan menggunakan algoritma Text Similarity & Network Graph.</p>
             
             <div class="overflow-y-auto flex-1 pr-2 w-full">
-                <!-- NETWORK GRAPH DIPERBESAR TINGGINYA (500px) -->
-                <div class="mb-8">
+                <!-- NETWORK GRAPH (Tinggi 500px) -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-slate-700 mb-2"><i class="fas fa-network-wired text-blue-500 mr-2"></i>Visualisasi Network</h3>
                     <div id="networkGraph" class="shadow-inner bg-white rounded border border-gray-200"></div>
                 </div>
 
-                <!-- BENTUK KARTU LAMA (LENGKAP DENGAN KATA KUNCI & PRODI) DIKEMBALIKAN -->
+                <!-- KARTU DETAIL SINERGI TEMA STRATEGIS DIKEMBALIKAN -->
                 <div>
                     <h3 class="text-lg font-bold text-slate-800 mb-4 border-b border-gray-200 pb-2"><i class="fas fa-layer-group text-emerald-500 mr-2"></i>Detail Sinergi Tema Strategis</h3>
                     <div id="gridTema" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -495,7 +500,7 @@
         </div>
     </div>
 
-    <!-- MODAL KESESUAIAN ROADMAP (TAMPILAN RINCIAN LENGKAP SEBELUMNYA) -->
+    <!-- MODAL KESESUAIAN ROADMAP -->
     <div id="renstraModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col p-4 md:p-6 relative border-t-4 border-t-fuchsia-600">
             <button onclick="closeRenstra()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
@@ -508,7 +513,7 @@
         </div>
     </div>
 
-    <!-- MODAL RELEVANSI (TAMPILAN RINCIAN LENGKAP SEBELUMNYA) -->
+    <!-- MODAL RELEVANSI -->
     <div id="relevansiModal" class="fixed inset-0 modal-overlay flex items-center justify-center hidden z-[80]">
         <div class="bg-white rounded shadow-2xl w-full max-w-6xl h-[85vh] flex flex-col p-4 md:p-6 relative border-t-4 border-t-teal-600">
             <button onclick="closeRelevansi()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fas fa-times text-xl"></i></button>
@@ -840,6 +845,75 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
+        async function processCSVUpload2025(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                
+                let startIndex = 0;
+                let separator = ';';
+                if (lines[0].includes('sep=')) {
+                    separator = lines[0].split('=')[1].trim();
+                    startIndex = 1;
+                } else if (lines[0].includes(',')) {
+                    separator = ',';
+                }
+
+                startIndex++; // Skip headers
+
+                let successCount = 0;
+                const btn = document.getElementById('btnImport2025');
+                if(btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Impor...`;
+
+                for (let i = startIndex; i < lines.length; i++) {
+                    const currentLine = lines[i];
+                    if(!currentLine.trim()) continue;
+                    
+                    const values = [];
+                    let inQuotes = false;
+                    let currentValue = '';
+                    for (let char of currentLine) {
+                        if (char === '"') {
+                            inQuotes = !inQuotes;
+                        } else if (char === separator && !inQuotes) {
+                            values.push(currentValue);
+                            currentValue = '';
+                        } else {
+                            currentValue += char;
+                        }
+                    }
+                    values.push(currentValue);
+
+                    if (values.length >= 6) {
+                        const newData = {
+                            Ketua: values[0].replace(/['"]/g, '').trim(),
+                            Judul: values[1].replace(/['"]/g, '').trim(),
+                            "Program Studi": values[2].replace(/['"]/g, '').trim(),
+                            Jenis: values[3].replace(/['"]/g, '').trim(),
+                            "Sumber Hibah": values[4].replace(/['"]/g, '').trim(),
+                            Dana: parseInt(values[5].replace(/\\D/g, '')) || 0,
+                            Tahun: 2025
+                        };
+                        try {
+                            await collection2025.add(newData);
+                            successCount++;
+                        } catch(err) {
+                            console.error("Gagal impor baris:", err);
+                        }
+                    }
+                }
+                
+                if(btn) btn.innerHTML = `<i class="fas fa-file-import mr-1"></i> Impor CSV`;
+                document.getElementById('importCsv2025').value = ''; 
+                alert(`Berhasil mengimpor ${successCount} data ke Arsip 2025!`);
+            };
+            reader.readAsText(file);
+        }
+
         function renderTable2025() {
             const tbody = document.getElementById('tbody2025');
             document.getElementById('count2025').innerText = `${data2025.length} data`;
@@ -905,20 +979,58 @@
                 if (topWord) clusters[matchedTheme].keywordsHit[topWord] = (clusters[matchedTheme].keywordsHit[topWord] || 0) + 1;
             });
 
-            const prodiIdMap = {};
-            let themeIdCounter = 1;
+            const roadmapGrid = document.getElementById('gridTema'); roadmapGrid.innerHTML = '';
+            let themeIdCounter = 1; const themeIdMap = {};
 
+            Object.keys(clusters).forEach(themeName => {
+                let cluster = clusters[themeName]; if (cluster.count === 0) return; 
+
+                themeIdMap[themeName] = themeIdCounter;
+                nodes.push({ id: themeIdCounter, label: themeName + "\\n(" + cluster.count + ")", shape: 'box', color: { background: (strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor), border: 'white' }, font: { color: 'white', size: 12, face: 'Segoe UI' } });
+                themeIdCounter++;
+
+                let style = themeName === "Topik Multidisiplin" ? {color: "border-gray-500", icon: "fa-layer-group"} : {color: `border-[${strategicThemes[themeName].nodeColor}]`, icon: strategicThemes[themeName].icon};
+                let kwArr = Object.entries(cluster.keywordsHit).sort((a,b) => b[1] - a[1]).slice(0, 3).map(k => `<span class="bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded text-[10px] text-gray-600 mr-1 mb-1 inline-block">${k[0]}</span>`).join('');
+                
+                let prodiBadges = Array.from(cluster.prodi).map(p => `<span class="inline-block border rounded-full px-2 py-0.5 text-[10px] font-semibold mr-1 mb-1 bg-white shadow-sm" style="color: ${strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor}; border-color: ${strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor};">${p}</span>`).join('');
+
+                roadmapGrid.innerHTML += `
+                    <div class="pbi-card flex flex-col justify-between" style="border-top: 4px solid ${strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor};">
+                        <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg shrink-0" style="background-color: ${strategicThemes[themeName] ? strategicThemes[themeName].nodeColor + '20' : clusters[themeName].nodeColor + '20'}; color: ${strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor};">
+                                    <i class="fas ${style.icon}"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm leading-tight">${themeName}</h3>
+                                    <p class="text-[10px] text-slate-500 mt-1">${cluster.count} Proyek Penelitian/Pengmas</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="text-[9px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Prodi Terlibat:</p>
+                                <div class="flex flex-wrap">${prodiBadges}</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="mb-3">
+                                <p class="text-[9px] font-bold text-slate-400 mb-1.5 uppercase tracking-wide">Kata Kunci Utama:</p>
+                                <div class="flex flex-wrap">${kwArr||'-'}</div>
+                            </div>
+                            
+                            <div class="border-t border-slate-100 pt-3 flex justify-between items-center mt-2">
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase">Estimasi Penyerapan:</span>
+                                <span class="font-bold text-slate-800 text-sm">${formatRupiah(cluster.totalDana)}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            const prodiIdMap = {};
             Array.from(prodiSet).forEach(prodi => {
                 prodiIdMap[prodi] = themeIdCounter;
                 nodes.push({ id: themeIdCounter, label: prodi, shape: 'dot', size: 10, color: { background: '#ffffff', border: '#8a8886' }, font: { color: '#323130', size: 11, face: 'Segoe UI' } });
-                themeIdCounter++;
-            });
-
-            const themeIdMap = {};
-            Object.keys(clusters).forEach(themeName => {
-                let cluster = clusters[themeName]; if (cluster.count === 0) return; 
-                themeIdMap[themeName] = themeIdCounter;
-                nodes.push({ id: themeIdCounter, label: themeName + "\\n(" + cluster.count + ")", shape: 'box', color: { background: (strategicThemes[themeName] ? strategicThemes[themeName].nodeColor : clusters[themeName].nodeColor), border: 'white' }, font: { color: 'white', size: 12, face: 'Segoe UI' } });
                 themeIdCounter++;
             });
 
@@ -932,7 +1044,6 @@
             const container = document.getElementById('networkGraph');
             if(network !== null) network.destroy();
             
-            // Jeda singkat agar modal render duluan sebelum menggambar vis.js
             setTimeout(() => {
                 network = new vis.Network(container, { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) }, { physics: { stabilization: true, barnesHut: { springLength: 120 } } });
             }, 150);
